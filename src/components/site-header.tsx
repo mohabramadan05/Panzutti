@@ -28,6 +28,7 @@ export function SiteHeader({ locale, t }: { locale: Locale; t: Dictionary["nav"]
 
   const links = [
     { href: `/${locale}/menu`, label: t.menu },
+    { href: `/${locale}/reserve`, label: t.reserve },
     { href: `/${locale}#story`, label: t.about },
     { href: `/${locale}/family`, label: t.family },
     { href: `/${locale}#visit`, label: t.visit },
@@ -48,7 +49,7 @@ export function SiteHeader({ locale, t }: { locale: Locale; t: Dictionary["nav"]
 
         <nav aria-label="Main" className="hidden items-center gap-1 lg:flex">
           {links.map((l) => (
-            <Link key={l.href} href={l.href} className="rounded-full px-4 py-2 text-sm font-bold text-foreground/80 transition hover:bg-muted hover:text-primary">
+            <Link key={l.href} href={l.href} className="whitespace-nowrap rounded-full px-2.5 py-2 text-sm font-bold text-foreground/80 transition hover:bg-muted hover:text-primary xl:px-4">
               {l.label}
             </Link>
           ))}

@@ -666,3 +666,17 @@ Anyone can now share a photo **without an account**. Every photo still waits for
 3. Signed-in customers keep using `submit_family_photo` and their own folder.
 
 **Limits (no account, so they are global):** 30 guest uploads per hour (`guest_family_upload_allowed()`), and at most 100 guest photos waiting for review. Rejected or abandoned guest files stay in the bucket until an admin deletes them. Consider a captcha before launch if spam appears.
+
+## 12. v4 additions (2026-10-24) — `panzutti_supabase_v4.sql`
+
+**Not applied yet** — the owner must run the whole file in Supabase → SQL Editor.
+
+- **VAT + service.** `branches.tax_rate` (0.14) and `branches.service_rate` (0.12). `place_order` copies them onto the order (`orders.tax_rate`, `orders.service_rate`; old orders keep 0).
+  New generated columns `orders.service_total` and `orders.tax_total`; `orders.total` is now
+  `base + service_total + tax_total + delivery_fee` where `base = max(subtotal − discount_total, 0)`,
+  `service_total = round(base × service_rate)` (reservations only) and `tax_total = round((base + service_total) × tax_rate)`.
+- **Reservations.** `orders.is_reservation`, `orders.party_size`. A reservation is a dine-in order stored as `type = 'pickup'` with `scheduled_for` = table time (15 min – 30 days ahead, inside opening hours).
+  `place_order` gained `p_reservation boolean = false` and `p_party_size int` (old signature dropped and recreated; existing callers keep working). Reservation emails always reach the restaurant.
+- `place_order`, `track_order` return `service_total`, `tax_total`, `is_reservation`, `party_size`.
+- `find_orders_by_phone`: last 7 days + upcoming reservations, max 20 — the /track page now works with the phone only.
+- The `send-emails` Edge Function prints Service/VAT lines and the number of guests (redeploy it after the SQL).

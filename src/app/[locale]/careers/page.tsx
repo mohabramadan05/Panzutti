@@ -52,7 +52,7 @@ export default async function CareersPage({ params }: { params: Promise<{ locale
                 ))}
               </ul>
             </div>
-            <Mascot point="start" eager className="mx-auto hidden h-80 animate-float drop-shadow-xl md:block" />
+            <Mascot pose="proud" point="start" eager className="mx-auto hidden h-80 animate-float drop-shadow-xl md:block" />
           </div>
         </section>
 

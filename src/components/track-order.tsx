@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Loader2, Search } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, Loader2, Search } from "lucide-react";
 import { OrderStatus } from "./order-status";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { readLastOrder } from "@/lib/last-order";
@@ -17,19 +17,19 @@ type Found = {
   payment_status: "paid" | "unpaid";
   total: number;
   created_at: string;
+  is_reservation?: boolean; // v4
+  scheduled_for?: string | null;
 };
 
 const CUSTOMER_KEY = "panzutti-customer-v1"; // same key the checkout uses
 
 /**
- * Phone (required) + order number (optional).
- * - with a number → straight to that order (track_order)
- * - phone only → short list of the last 3 days (find_orders_by_phone), no names/addresses/items
+ * Phone number only → find_orders_by_phone (recent orders + upcoming reservations, no names/addresses/items).
+ * One order → its live status straight away (track_order); several → the list, tap one for its status.
  * The phone stays in component state only — never in the URL.
  */
 export function TrackOrder({ locale, t, tOrder }: { locale: Locale; t: Dictionary["track"]; tOrder: Dictionary["order"] }) {
   const [phone, setPhone] = useState("");
-  const [number, setNumber] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [results, setResults] = useState<Found[] | null>(null);
@@ -54,18 +54,15 @@ export function TrackOrder({ locale, t, tOrder }: { locale: Locale; t: Dictionar
     setError("");
     const p = normalizePhone(phone);
     if (!p) return setError(t.phoneInvalid);
-    const n = number.replace(/\D/g, "");
-    if (n) {
-      setSelected({ number: Number(n), phone: p });
-      return;
-    }
     if (!supabase) return;
     setBusy(true);
     const { data, error: err } = await supabase.rpc("find_orders_by_phone", { p_phone: p });
     setBusy(false);
     if (err) return setError(err.message);
+    const found = (data ?? []) as Found[];
     setSearchedPhone(p);
-    setResults((data ?? []) as Found[]);
+    setResults(found);
+    if (found.length === 1) setSelected({ number: found[0].order_number, phone: p });
   };
 
   if (selected)
@@ -75,8 +72,11 @@ export function TrackOrder({ locale, t, tOrder }: { locale: Locale; t: Dictionar
         t={tOrder}
         orderNumber={selected.number}
         phone={selected.phone}
-        onBack={() => setSelected(null)}
-        backLabel={t.allOrders}
+        onBack={() => {
+          setSelected(null);
+          if ((results?.length ?? 0) <= 1) setResults(null);
+        }}
+        backLabel={(results?.length ?? 0) > 1 ? t.allOrders : t.find}
       />
     );
 
@@ -87,7 +87,7 @@ export function TrackOrder({ locale, t, tOrder }: { locale: Locale; t: Dictionar
     <div className="mx-auto max-w-2xl">
       <form onSubmit={submit} noValidate className="space-y-4 rounded-[2rem] bg-card p-6 ring-1 ring-border md:p-8">
         <p className="text-muted-foreground">{t.subtitle}</p>
-        <div className="grid gap-4 sm:grid-cols-[1.4fr_1fr]">
+        <div>
           <label className="block">
             <span className="mb-1.5 block text-sm font-bold">{t.phone}</span>
             <input
@@ -108,17 +108,6 @@ export function TrackOrder({ locale, t, tOrder }: { locale: Locale; t: Dictionar
               )}
             />
           </label>
-          <label className="block">
-            <span className="mb-1.5 block text-sm font-bold">{t.number}</span>
-            <input
-              value={number}
-              onChange={(e) => setNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
-              inputMode="numeric"
-              dir="ltr"
-              placeholder="1024"
-              className="h-12 w-full rounded-2xl bg-background px-4 ring-1 ring-border outline-none focus:ring-2 focus:ring-primary"
-            />
-          </label>
         </div>
         {error && (
           <p role="alert" className="text-sm font-bold text-brand-red">
@@ -137,7 +126,7 @@ export function TrackOrder({ locale, t, tOrder }: { locale: Locale; t: Dictionar
 
       {results && (
         <section className="mt-8" aria-live="polite">
-          <h2 className="text-2xl text-primary">{t.recent}</h2>
+          <h2 className="text-2xl text-primary">{t.recent.replace("{n}", String(results.length))}</h2>
           {results.length === 0 ? (
             <p className="mt-4 rounded-2xl bg-card px-5 py-4 text-muted-foreground ring-1 ring-border">{t.none}</p>
           ) : (
@@ -154,6 +143,11 @@ export function TrackOrder({ locale, t, tOrder }: { locale: Locale; t: Dictionar
                       <span className="min-w-0 flex-1">
                         <span className="flex flex-wrap items-center gap-2">
                           <span className="font-display text-xl text-primary">#{o.order_number}</span>
+                          {o.is_reservation && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-brand-yellow px-2.5 py-0.5 text-xs font-extrabold text-foreground">
+                              <CalendarDays className="h-3 w-3" aria-hidden /> {t.reservation}
+                            </span>
+                          )}
                           <span
                             className={cn(
                               "rounded-full px-2.5 py-0.5 text-xs font-bold",
@@ -171,7 +165,7 @@ export function TrackOrder({ locale, t, tOrder }: { locale: Locale; t: Dictionar
                           )}
                         </span>
                         <span className="mt-1 block text-sm text-muted-foreground">
-                          {time(o.created_at)} · {egp(o.total, locale)}
+                          {time(o.is_reservation && o.scheduled_for ? o.scheduled_for : o.created_at)} · {egp(o.total, locale)}
                         </span>
                       </span>
                       <span className="inline-flex shrink-0 items-center gap-1 text-sm font-extrabold text-primary">

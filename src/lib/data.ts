@@ -37,6 +37,8 @@ export type Branch = {
   min_delivery_order: number; // piasters
   accepts_instapay: boolean;
   instapay_address: string | null; // InstaPay stays hidden until the owner sets this
+  tax_rate?: number; // v4: VAT, default 0.14
+  service_rate?: number; // v4: service on reservations, default 0.12
 };
 
 export type FamilyPhoto = { id: string; url: string; caption: string | null; uploader_name: string | null; is_official: boolean };
@@ -49,23 +51,65 @@ export type HomeData = {
   live: boolean; // false = Supabase not reachable, showing built-in content
 };
 
-const CDN = "https://res.cloudinary.com/fwyx4bzm/image/upload";
+/** Menu photos saved in /public/menu/<slug>.webp (copied from the live menu, 2026-10-24). They win over `image_url`, so nothing loads from another site. */
+const LOCAL_MENU_PHOTOS = new Set([
+  "arugula-lemon-shrimp",
+  "caesar-club",
+  "capri",
+  "caramelized-beef",
+  "chicken-arancini-balls",
+  "chicken-cream-alfredo",
+  "chicken-rolls",
+  "chips",
+  "chocolate-temptation",
+  "classic-caesar",
+  "deli-delights",
+  "easy-morning",
+  "everyday-routine",
+  "fizz-craft",
+  "fizzy-delight",
+  "fresh-and-smoked",
+  "fried-truffle-buffalo-balls",
+  "golden-chicken-parm",
+  "grilled-chicken-pesto",
+  "hot-honey-pepperoni",
+  "iconic-tiramisu",
+  "kiwi-chiller",
+  "marinara-shakshouka",
+  "nutella-panuozzo",
+  "original-caprese",
+  "passion-fruit",
+  "peach-bliss",
+  "philly-sausage",
+  "power-plus",
+  "rustic-wedges",
+  "sausage-arancini-balls",
+  "shrimp-and-zest",
+  "shrimp-arancini-balls",
+  "shrimp-luxe",
+  "the-comfort",
+  "the-local",
+  "truffle-state",
+  "white-energy",
+]);
+
+export const localMenuImage = (slug: string) => (LOCAL_MENU_PHOTOS.has(slug) ? `/menu/${slug}.webp` : null);
 
 /** Shown if Supabase is not configured or not reachable, so the page never breaks. */
 const FALLBACK_ITEMS: MenuItem[] = [
-  { id: "f1", slug: "fried-truffle-buffalo-balls", name_en: "Fried Truffle Buffalo Balls", name_ar: "كرات جبنة بافلو مقلية بالترافل", description_en: "5 fried buffalo cheese balls with truffle mayo sauce, parmesan cheese and parsley.", description_ar: null, price: 14500, image_url: `${CDN}/v1784112206/panzutti/menu/Djdm5XM30k3CC4N5AYONL.webp`, is_signature: true, is_sold_out: false, addon_groups: [] },
-  { id: "f2", slug: "hot-honey-pepperoni", name_en: "Hot Honey Pepperoni", name_ar: "هوت هوني بيبروني", description_en: "Mozzarella and pepperoni grilled to crispy perfection, finished with our signature hot honey sauce.", description_ar: null, price: 20500, image_url: `${CDN}/v1784113482/panzutti/menu/cjnN-7j5AUzV-yVSbYbi4.webp`, is_signature: true, is_sold_out: false, addon_groups: [] },
-  { id: "f3", slug: "nutella-panuozzo", name_en: "Nutella Panuozzo", name_ar: "بانوتزو نوتيلا", description_en: "A freshly made cocoa-dough panuozzo filled generously with creamy Nutella.", description_ar: null, price: 18500, image_url: `${CDN}/v1784458184/panzutti/menu/7d04sYCoj9OKi2cIii5HN.png`, is_signature: true, is_sold_out: false, addon_groups: [] },
-  { id: "f4", slug: "fizz-craft", name_en: "Fizz Craft", name_ar: "فيز كرافت", description_en: "Mixed berries meet peach in a sparkling citrus refresher.", description_ar: null, price: 17500, image_url: `${CDN}/v1784113621/panzutti/menu/IOwCDCfA8rRXGjVi8L73p.webp`, is_signature: true, is_sold_out: false, addon_groups: [] },
-  { id: "f5", slug: "chicken-cream-alfredo", name_en: "Chicken Cream Alfredo", name_ar: "تشيكن كريم ألفريدو", description_en: "Grilled chicken breast, fresh rocca and parmesan with creamy alfredo mushroom sauce.", description_ar: null, price: 25000, image_url: `${CDN}/v1784112166/panzutti/menu/bY9F6pE8cY_u8RjorySmA.webp`, is_signature: false, is_sold_out: false, addon_groups: [] },
-  { id: "f6", slug: "the-comfort", name_en: "The Comfort", name_ar: "ذا كومفورت", description_en: "Golden fried sourdough panuozzo with marinara, fresh mozzarella, basil and parmesan.", description_ar: null, price: 17900, image_url: `${CDN}/v1784113179/panzutti/menu/yDPyC2Rsy9eWWIOrw6d3T.webp`, is_signature: false, is_sold_out: false, addon_groups: [
+  { id: "f1", slug: "fried-truffle-buffalo-balls", name_en: "Fried Truffle Buffalo Balls", name_ar: "كرات جبنة بافلو مقلية بالترافل", description_en: "5 fried buffalo cheese balls with truffle mayo sauce, parmesan cheese and parsley.", description_ar: null, price: 14500, image_url: localMenuImage("fried-truffle-buffalo-balls"), is_signature: true, is_sold_out: false, addon_groups: [] },
+  { id: "f2", slug: "hot-honey-pepperoni", name_en: "Hot Honey Pepperoni", name_ar: "هوت هوني بيبروني", description_en: "Mozzarella and pepperoni grilled to crispy perfection, finished with our signature hot honey sauce.", description_ar: null, price: 20500, image_url: localMenuImage("hot-honey-pepperoni"), is_signature: true, is_sold_out: false, addon_groups: [] },
+  { id: "f3", slug: "nutella-panuozzo", name_en: "Nutella Panuozzo", name_ar: "بانوتزو نوتيلا", description_en: "A freshly made cocoa-dough panuozzo filled generously with creamy Nutella.", description_ar: null, price: 18500, image_url: localMenuImage("nutella-panuozzo"), is_signature: true, is_sold_out: false, addon_groups: [] },
+  { id: "f4", slug: "fizz-craft", name_en: "Fizz Craft", name_ar: "فيز كرافت", description_en: "Mixed berries meet peach in a sparkling citrus refresher.", description_ar: null, price: 17500, image_url: localMenuImage("fizz-craft"), is_signature: true, is_sold_out: false, addon_groups: [] },
+  { id: "f5", slug: "chicken-cream-alfredo", name_en: "Chicken Cream Alfredo", name_ar: "تشيكن كريم ألفريدو", description_en: "Grilled chicken breast, fresh rocca and parmesan with creamy alfredo mushroom sauce.", description_ar: null, price: 25000, image_url: localMenuImage("chicken-cream-alfredo"), is_signature: false, is_sold_out: false, addon_groups: [] },
+  { id: "f6", slug: "the-comfort", name_en: "The Comfort", name_ar: "ذا كومفورت", description_en: "Golden fried sourdough panuozzo with marinara, fresh mozzarella, basil and parmesan.", description_ar: null, price: 17900, image_url: localMenuImage("the-comfort"), is_signature: false, is_sold_out: false, addon_groups: [
     { id: "fg1", name_en: "Choose a side", name_ar: "اختار الجانبي", min_select: 1, max_select: 1, addons: [
       { id: "fa1", name_en: "Fried chips", name_ar: "بطاطس مقلية", price: 0, max_quantity: 1, is_default: true, is_sold_out: false },
       { id: "fa2", name_en: "Salad", name_ar: "سلطة", price: 0, max_quantity: 1, is_default: false, is_sold_out: false },
     ] },
   ] },
-  { id: "f7", slug: "iconic-tiramisu", name_en: "Iconic Tiramisu", name_ar: "تيراميسو", description_en: "Rich mascarpone cream, coffee-soaked lady fingers and a cocoa finish.", description_ar: null, price: 29500, image_url: `${CDN}/v1784114596/panzutti/menu/yFvCzaQW6uKEdIRY2oyEp.webp`, is_signature: false, is_sold_out: false, addon_groups: [] },
-  { id: "f8", slug: "kiwi-chiller", name_en: "Kiwi Chiller", name_ar: "كيوي تشيلر", description_en: "Fresh kiwi and mint blended into the ultimate refreshing chill.", description_ar: null, price: 17500, image_url: `${CDN}/v1784113789/panzutti/menu/-PI6QAugF2JjbYpOSxAHs.webp`, is_signature: false, is_sold_out: false, addon_groups: [] },
+  { id: "f7", slug: "iconic-tiramisu", name_en: "Iconic Tiramisu", name_ar: "تيراميسو", description_en: "Rich mascarpone cream, coffee-soaked lady fingers and a cocoa finish.", description_ar: null, price: 29500, image_url: localMenuImage("iconic-tiramisu"), is_signature: false, is_sold_out: false, addon_groups: [] },
+  { id: "f8", slug: "kiwi-chiller", name_en: "Kiwi Chiller", name_ar: "كيوي تشيلر", description_en: "Fresh kiwi and mint blended into the ultimate refreshing chill.", description_ar: null, price: 17500, image_url: localMenuImage("kiwi-chiller"), is_signature: false, is_sold_out: false, addon_groups: [] },
 ];
 
 /** Fallback items grouped the way the real menu is (slugs match `menu_categories`). */
@@ -77,9 +121,8 @@ const FALLBACK_CATEGORIES: MenuCategory[] = [
   { id: "fc5", slug: "refreshers", name_en: "Refreshers", name_ar: "مشروبات منعشة", items: ["f8"] },
 ].map((c) => ({ ...c, items: c.items.map((id) => FALLBACK_ITEMS.find((i) => i.id === id)!) }));
 
-/** `menu_items.image_url` is still NULL in the DB: borrow the Cloudinary photo with the same slug until real photos are uploaded. */
-export const withImage = <T extends Pick<MenuItem, "slug" | "image_url">>(i: T): T =>
-  i.image_url ? i : { ...i, image_url: FALLBACK_ITEMS.find((f) => f.slug === i.slug)?.image_url ?? null };
+/** Prefer the self-hosted photo; keep `image_url` (e.g. a Supabase upload) for items without one. */
+export const withImage = <T extends Pick<MenuItem, "slug" | "image_url">>(i: T): T => ({ ...i, image_url: localMenuImage(i.slug) ?? i.image_url });
 
 const FALLBACK_BRANCH: Branch = {
   id: "fallback",
@@ -98,6 +141,8 @@ const FALLBACK_BRANCH: Branch = {
   min_delivery_order: 0,
   accepts_instapay: false,
   instapay_address: null,
+  tax_rate: 0.14,
+  service_rate: 0.12,
 };
 
 async function withTimeout<T>(p: PromiseLike<T>, ms = 4000): Promise<T> {

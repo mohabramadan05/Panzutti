@@ -28,7 +28,7 @@ export default async function CheckoutPage({ params }: { params: Promise<{ local
       <SiteHeader locale={locale} t={t.nav} />
       <main id="main" className="mx-auto max-w-6xl px-4 pb-20 pt-6">
         <h1 className="mb-8 text-4xl text-primary md:text-5xl">{t.checkout.title}</h1>
-        <CheckoutForm locale={locale} t={t.checkout} tCart={t.cart} branch={data.branch} catalog={data.live ? buildCatalog(data.categories) : null} />
+        <CheckoutForm locale={locale} t={t.checkout} tCart={t.cart} tItem={t.item} branch={data.branch} catalog={data.live ? buildCatalog(data.categories) : null} />
       </main>
       <SiteFooter locale={locale} />
     </>

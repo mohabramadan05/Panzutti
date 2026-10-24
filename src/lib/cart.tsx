@@ -9,8 +9,37 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { Addon, AddonGroup, MenuItem } from "./data";
 import type { Catalog } from "./catalog";
+import type { ReservationPick } from "./reservation";
 
-export type OrderType = "pickup" | "delivery";
+/** "reservation" = dine-in table booking with pre-ordered food (sent to place_order as pickup + p_reservation). */
+export type OrderType = "pickup" | "delivery" | "reservation";
+
+/** Same defaults as branches.tax_rate / service_rate (v4). Display only — place_order computes the real totals. */
+export const TAX_RATE = 0.14;
+export const SERVICE_RATE = 0.12;
+
+/** Estimated totals, same formula as the orders table: service on reservations, then 14% VAT on (food − discount + service). */
+export function estimateTotals({
+  subtotal,
+  discount = 0,
+  deliveryFee = 0,
+  type,
+  taxRate = TAX_RATE,
+  serviceRate = SERVICE_RATE,
+}: {
+  subtotal: number;
+  discount?: number;
+  deliveryFee?: number;
+  type: OrderType;
+  taxRate?: number;
+  serviceRate?: number;
+}) {
+  const base = Math.max(subtotal - discount, 0);
+  const service = type === "reservation" ? Math.round(base * serviceRate) : 0;
+  const tax = Math.round((base + service) * taxRate);
+  const fee = type === "delivery" ? deliveryFee : 0;
+  return { base, service, tax, deliveryFee: fee, total: base + service + tax + fee };
+}
 
 export type CartAddon = Pick<Addon, "id" | "name_en" | "name_ar" | "price"> & { group_id: string; quantity: number };
 
@@ -23,7 +52,7 @@ export type CartLine = {
   note: string;
 };
 
-type CartState = { lines: CartLine[]; type: OrderType };
+type CartState = { lines: CartLine[]; type: OrderType; reservation: ReservationPick | null };
 
 type CartContextValue = CartState & {
   /** false until localStorage has been read (avoid flashing "empty cart") */
@@ -35,6 +64,7 @@ type CartContextValue = CartState & {
   remove: (key: string) => void;
   clear: () => void;
   setType: (type: OrderType) => void;
+  setReservation: (r: ReservationPick | null) => void;
 };
 
 export const MAX_LINE_QUANTITY = 50; // same limit as place_order
@@ -61,22 +91,25 @@ export function missingGroups(groups: AddonGroup[], picked: Record<string, numbe
   return groups.filter((g) => g.addons.filter((a) => (picked[a.id] ?? 0) > 0).length < g.min_select);
 }
 
+const EMPTY: CartState = { lines: [], type: "delivery", reservation: null };
+
 function read(): CartState {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { lines: [], type: "delivery" };
+    if (!raw) return EMPTY;
     const parsed = JSON.parse(raw) as Partial<CartState>;
     return {
       lines: Array.isArray(parsed.lines) ? parsed.lines : [],
-      type: parsed.type === "pickup" ? "pickup" : "delivery",
+      type: parsed.type === "pickup" || parsed.type === "reservation" ? parsed.type : "delivery",
+      reservation: parsed.reservation && typeof parsed.reservation === "object" ? parsed.reservation : null,
     };
   } catch {
-    return { lines: [], type: "delivery" };
+    return EMPTY;
   }
 }
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<CartState>({ lines: [], type: "delivery" });
+  const [state, setState] = useState<CartState>(EMPTY);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -123,6 +156,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const remove = useCallback((key: string) => setState((s) => ({ ...s, lines: s.lines.filter((l) => l.key !== key) })), []);
   const clear = useCallback(() => setState((s) => ({ ...s, lines: [] })), []);
   const setType = useCallback((type: OrderType) => setState((s) => ({ ...s, type })), []);
+  const setReservation = useCallback((reservation: ReservationPick | null) => setState((s) => ({ ...s, reservation })), []);
 
   const value = useMemo<CartContextValue>(
     () => ({
@@ -135,8 +169,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       remove,
       clear,
       setType,
+      setReservation,
     }),
-    [state, ready, add, setQuantity, remove, clear, setType],
+    [state, ready, add, setQuantity, remove, clear, setType, setReservation],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

@@ -21,7 +21,10 @@ Owner: Mohab. Client: **Panzutti**, a panuozzo (wood-fired Neapolitan sandwich-p
 | Welcome pop-up on the home page (`components/welcome-popup.tsx`, character `public/brand/character-welcome.jpg`, shown once per browser, picks delivery/pickup) | ✅ Built |
 | Full PDF menu in the DB (39 items + photos + Arabic) | ✅ Loaded |
 | Animated delivery scene on the order page (`components/delivery-scene.tsx` + `.css`: SVG shop → scooter → house, follows the live status; pickup shows a bag at the shop) | ✅ Built |
-| Realtime instead of polling, scheduled orders | ⏳ Next |
+| Table reservations `/reserve` (date, 30-min slot, guests, pre-ordered food → checkout as type "reservation"; `lib/reservation.ts`, `components/reservation-picker.tsx`) + 14% VAT on every order and 12% service on reservations (`estimateTotals()` in `lib/cart.tsx`) | ✅ Built — **needs `database/panzutti_supabase_v4.sql` run** (until then reservations fail and totals have no VAT) |
+| Images self-hosted: menu photos `public/menu/<slug>.webp` (`localMenuImage()` in `lib/data.ts`), mascot poses `public/mascots/*.webp` (`MASCOTS` in `lib/brand.ts`, `<Mascot pose>`), /pizza photos `public/pizza`. Logo is a text wordmark (old logo PNGs are gone from panzutti.com) | ✅ |
+| Scroll animations: `[data-reveal]` + `components/scroll-reveal.tsx` (mounted in the locale layout) | ✅ |
+| Realtime instead of polling, scheduled delivery/pickup orders | ⏳ Next |
 | Google sign-in, account, saved addresses | ⏳ Next |
 | Panzutti Family wall `/family` + share page `/family/share` (anyone can upload with a name; optional Google sign-in adds "your photos"; every photo needs admin approval) | ✅ Built — guest upload needs the v3 (2) SQL run (see section 8) |
 | Join our team `/careers` + Become a supplier `/suppliers` (shared `components/application-form.tsx` → optional file to `applications/incoming/…` → `submit_application`; open positions/categories via `getJoinData()`) | ✅ Built — validation tested; no real application sent yet |
@@ -258,6 +261,8 @@ The server validates sold-out items, required groups (`min_select`/`max_select`)
 ---
 
 ## 8. Things the owner still has to do (not code)
+- **Run `database/panzutti_supabase_v4.sql`** (Supabase → SQL Editor, whole file): VAT, service charge, reservations, phone-only tracking. Then redeploy the `send-emails` Edge Function (it now prints VAT/service lines). The admin project should show `tax_total`, `service_total`, `is_reservation`, `party_size`.
+- Drop the real logo files into `public/brand/` and render them in `Logo` (`components/brand.tsx`) — the old panzutti.com logo/photo URLs return 404.
 - **Run the guest-upload SQL** (not applied yet — the migration tool was declined): Supabase → SQL Editor → paste the section `v3 (2)` of `database/panzutti_supabase_v3.sql` (from `CREATE OR REPLACE FUNCTION public.guest_family_upload_allowed()` to the end) → Run. Until then, guests on `/family/share` get an upload error; signed-in sharing is unaffected.
 - Supabase → Edge Functions → Secrets: add `GMAIL_USER` and `GMAIL_APP_PASSWORD` (a Gmail App Password). Optionally add `SITE_URL` and `EMAIL_REPLY_TO`.
 - Enable the Google provider in Supabase Auth. Redirect URI: `https://dpwsssmwarxntplorgtl.supabase.co/auth/v1/callback`. Also add the site under Auth → URL Configuration → Redirect URLs (`http://localhost:3000/**`, `https://panzutti.com/**`) or the family share sign-in will bounce. Until Google is on, `/family/share` shows "sign-in isn't switched on yet".

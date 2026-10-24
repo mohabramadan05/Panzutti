@@ -1,20 +1,19 @@
 "use client";
 
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Bike, ShoppingBag, X } from "lucide-react";
+import { Bike, CalendarDays, ShoppingBag, X } from "lucide-react";
+import { Mascot } from "./brand";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { useCart, type OrderType } from "@/lib/cart";
 import { cn } from "@/lib/utils";
 
-const SEEN_KEY = "panzutti-welcome-seen-v1";
 const DELAY_MS = 900;
 
 /**
- * First-visit welcome on the home page: the Panzutti character points at a greeting and the two
- * ways to order. Choosing one sets the cart's order type and opens the menu. Shown once per
- * browser (localStorage); if storage is blocked it simply shows each visit.
+ * Welcome on the home page, shown every time the home page is opened: the Panzutti character waves
+ * next to a greeting and the ways to eat with us. Delivery/pickup set the cart's order type and open
+ * the menu; "Reserve a table" opens /reserve.
  */
 export function WelcomePopup({ locale, t }: { locale: Locale; t: Dictionary["welcome"] }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -23,13 +22,6 @@ export function WelcomePopup({ locale, t }: { locale: Locale; t: Dictionary["wel
   const router = useRouter();
 
   useEffect(() => {
-    let seen = false;
-    try {
-      seen = window.localStorage.getItem(SEEN_KEY) === "1";
-    } catch {
-      // storage blocked
-    }
-    if (seen) return;
     const id = window.setTimeout(() => setOpen(true), DELAY_MS);
     return () => window.clearTimeout(id);
   }, []);
@@ -40,11 +32,6 @@ export function WelcomePopup({ locale, t }: { locale: Locale; t: Dictionary["wel
   }, [open]);
 
   const close = () => {
-    try {
-      window.localStorage.setItem(SEEN_KEY, "1");
-    } catch {
-      // not critical
-    }
     ref.current?.close();
     setOpen(false);
   };
@@ -52,7 +39,7 @@ export function WelcomePopup({ locale, t }: { locale: Locale; t: Dictionary["wel
   const choose = (type: OrderType) => {
     setType(type);
     close();
-    router.push(`/${locale}/menu`);
+    router.push(type === "reservation" ? `/${locale}/reserve` : `/${locale}/menu`);
   };
 
   if (!open) return null;
@@ -92,23 +79,25 @@ export function WelcomePopup({ locale, t }: { locale: Locale; t: Dictionary["wel
             >
               <ShoppingBag className="h-5 w-5" aria-hidden /> {t.pickup}
             </button>
+            <button
+              type="button"
+              onClick={() => choose("reservation")}
+              className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-primary bg-card px-5 py-3 font-extrabold text-primary transition hover:-translate-y-0.5 hover:bg-primary hover:text-primary-foreground"
+            >
+              <CalendarDays className="h-5 w-5" aria-hidden /> {t.reserve}
+            </button>
           </div>
           <button type="button" onClick={close} className="mt-4 text-sm font-bold text-foreground/60 underline-offset-4 hover:text-primary hover:underline">
             {t.browse}
           </button>
         </div>
 
-        {/* The character points at the greeting: flipped in Arabic so he still points at the text */}
+        {/* The character waves at the greeting: mirrored so he always faces the text, in EN and AR */}
         <div className="relative order-1 flex h-52 items-end justify-center overflow-hidden md:order-2 md:h-auto md:min-h-[420px]">
-          <Image
-            src="/brand/character.webp"
-            alt=""
-            width={525}
-            height={900}
-            priority
-            sizes="(min-width: 768px) 280px, 60vw"
-            className="h-[150%] w-auto max-w-none animate-slide-in object-contain object-top drop-shadow-xl rtl:-scale-x-100 md:h-full md:max-h-[440px] md:object-bottom md:py-6"
-          />
+          <div aria-hidden className="absolute bottom-0 h-40 w-40 rounded-full bg-brand-yellow md:bottom-10 md:h-64 md:w-64" />
+          <div className="relative mt-6 h-[150%] self-start animate-slide-in md:mt-0 md:h-full md:max-h-[440px] md:self-end md:py-6">
+            <Mascot pose="welcome" point="start" eager className="h-full animate-float drop-shadow-xl" />
+          </div>
         </div>
 
         <button

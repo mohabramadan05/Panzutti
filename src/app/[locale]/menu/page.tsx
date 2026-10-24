@@ -35,9 +35,6 @@ export default async function MenuPage({ params }: { params: Promise<{ locale: s
 
   return (
     <>
-      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground">
-        Skip to content
-      </a>
       <SiteHeader locale={locale} t={t.nav} />
 
       <main id="main">
@@ -63,7 +60,7 @@ export default async function MenuPage({ params }: { params: Promise<{ locale: s
               <div className="relative aspect-[5/3] rotate-2 overflow-hidden rounded-[2rem] bg-brand-green-dark shadow-2xl ring-8 ring-brand-cream">
                 <Image src={brand.photos.hero} alt="" fill priority sizes="440px" className="object-cover" />
               </div>
-              <Mascot point="end" eager className="absolute -bottom-12 -start-16 h-60 animate-float drop-shadow-xl" />
+              <Mascot pose="panuozzoExcited" point="end" eager className="absolute -bottom-12 -start-20 h-60 animate-float drop-shadow-xl" />
             </div>
           </div>
         </section>

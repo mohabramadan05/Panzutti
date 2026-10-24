@@ -242,3 +242,23 @@
   .pz-stage { width: min(78vw, 320px); --pz-size: min(78vw, 320px); }
   .pz-sticker { height: 5rem; width: 5rem; font-size: 1.35rem; }
 }
+
+/* The character stands at the start side of the pizza and points at it */
+.pz-mascot {
+  position: absolute;
+  z-index: 5;
+  bottom: -12%;
+  inset-inline-start: -30%;
+  height: 78%;
+  filter: drop-shadow(0 12px 18px rgb(22 53 42 / 0.25));
+  animation: pz-bob 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes pz-bob {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -8px; }
+}
+@media (max-width: 480px) {
+  .pz-mascot { inset-inline-start: -18%; height: 62%; bottom: -16%; }
+}
+button.pz-link { cursor: pointer; background: none; padding: 0.5rem 0.25rem; }

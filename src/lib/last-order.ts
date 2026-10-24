@@ -13,10 +13,14 @@ export type PlacedOrder = {
   subtotal: number;
   discount_total: number;
   delivery_fee: number;
+  /** v4: 14% VAT and (reservations) 12% service. Missing on orders placed before v4. */
+  tax_total?: number;
+  service_total?: number;
+  scheduled_for?: string | null;
   total: number;
 };
 
-export type LastOrder = PlacedOrder & { phone: string; name: string; type: "pickup" | "delivery"; placed_at: string };
+export type LastOrder = PlacedOrder & { phone: string; name: string; type: "pickup" | "delivery" | "reservation"; party_size?: number; placed_at: string };
 
 const KEY = "panzutti-last-order-v1";
 

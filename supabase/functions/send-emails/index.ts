@@ -81,6 +81,8 @@ function itemsTable(p: Record<string, any>, l: Locale) {
 ${total(t(l, "Subtotal", "المجموع الفرعي"), p.subtotal)}
 ${p.discount_total ? total(t(l, `Discount (${p.promo_code ?? ""})`, `خصم (${p.promo_code ?? ""})`), -p.discount_total) : ""}
 ${p.delivery_fee ? total(t(l, "Delivery", "التوصيل"), p.delivery_fee) : ""}
+${p.service_total ? total(t(l, "Service (12%)", "خدمة (١٢٪)"), p.service_total) : ""}
+${p.tax_total ? total(t(l, "VAT (14%)", "ضريبة القيمة المضافة (١٤٪)"), p.tax_total) : ""}
 ${total(t(l, "Total", "الإجمالي"), p.total, true)}</table>`;
 }
 
@@ -98,7 +100,7 @@ function render(e: OutboxRow): { subject: string; html: string } {
       const body = `<table role="presentation" cellspacing="0" cellpadding="0">
 ${row("Customer", p.customer_name)}${row("Phone", p.customer_phone)}${row("Email", p.customer_email)}
 ${row("Address", p.delivery_address)}${row("Address notes", p.delivery_notes)}
-${row("Kitchen note", p.note)}${row("Scheduled for", p.scheduled_for ? new Date(p.scheduled_for).toLocaleString("en-GB", { timeZone: "Africa/Cairo" }) : "ASAP")}
+${p.is_reservation ? row("Guests", p.party_size) : ""}${row("Kitchen note", p.note)}${row("Scheduled for", p.scheduled_for ? new Date(p.scheduled_for).toLocaleString("en-GB", { timeZone: "Africa/Cairo" }) : "ASAP")}
 ${row("Payment", payWord(p.payment_method, "en"))}${row("Branch", p.branch_name)}</table>
 ${p.payment_method === "instapay" ? `<p style="background:#fff6e0;padding:10px 12px;border-radius:8px">Waiting for the customer's InstaPay screenshot. Check it in the dashboard before confirming.</p>` : ""}
 ${itemsTable(p, "en")}`;

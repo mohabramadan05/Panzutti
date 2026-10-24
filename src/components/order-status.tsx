@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, CheckCircle2, Copy, Loader2, Phone, RefreshCw, Search, Upload, XCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarDays, Check, CheckCircle2, Copy, Loader2, Phone, RefreshCw, Search, Upload, XCircle } from "lucide-react";
 import { Mascot } from "./brand";
 import { DeliveryScene } from "./delivery-scene";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -18,6 +18,9 @@ type Tracked = {
   order_number: number;
   status: Status;
   type: "pickup" | "delivery";
+  is_reservation?: boolean; // v4
+  party_size?: number | null;
+  scheduled_for?: string | null;
   payment_method: "cash" | "instapay";
   payment_status: "paid" | "unpaid";
   instapay_address: string | null;
@@ -25,6 +28,8 @@ type Tracked = {
   subtotal: number;
   discount_total: number;
   delivery_fee: number;
+  tax_total?: number;
+  service_total?: number;
   total: number;
   branch: { name_en: string; name_ar: string; phone: string };
   items: { name: string; quantity: number; line_total: number; addons: { name: string; quantity: number }[] }[];
@@ -32,6 +37,7 @@ type Tracked = {
 
 const FLOW = {
   pickup: ["pending", "confirmed", "preparing", "ready", "completed"],
+  reservation: ["pending", "confirmed", "preparing", "ready", "completed"],
   delivery: ["pending", "confirmed", "preparing", "ready", "out_for_delivery", "completed"],
 } as const;
 
@@ -51,7 +57,7 @@ export function OrderConfirmation({ locale, t, orderNumber }: { locale: Locale; 
   if (!placed)
     return (
       <div className="flex flex-col items-center rounded-[2rem] bg-card px-6 py-14 text-center ring-1 ring-border">
-        <Mascot className="h-56 animate-float" />
+        <Mascot pose="curious" className="h-56 animate-float" />
         <p className="mt-4 text-lg text-muted-foreground">{t.missing}</p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link href={`/${locale}/track`} className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-extrabold text-primary-foreground">
@@ -133,7 +139,8 @@ export function OrderStatus({
 
   // Until track_order answers, show what place_order returned
   const o = order;
-  const type = o?.type ?? placed?.type ?? "pickup";
+  const type = o ? (o.is_reservation ? "reservation" : o.type) : (placed?.type ?? "pickup");
+  const isReservation = type === "reservation";
   const status: Status = o?.status ?? "pending";
   const flow: readonly Status[] = FLOW[type];
   const stepIndex = flow.indexOf(status);
@@ -141,6 +148,13 @@ export function OrderStatus({
   const subtotal = o?.subtotal ?? placed?.subtotal ?? 0;
   const discount = o?.discount_total ?? placed?.discount_total ?? 0;
   const deliveryFee = o?.delivery_fee ?? placed?.delivery_fee ?? 0;
+  const tax = o?.tax_total ?? placed?.tax_total ?? 0;
+  const service = o?.service_total ?? placed?.service_total ?? 0;
+  const when = o?.scheduled_for ?? placed?.scheduled_for ?? null;
+  const guests = o?.party_size ?? placed?.party_size ?? null;
+  const whenLabel = when
+    ? new Date(when).toLocaleString(locale === "ar" ? "ar-EG" : "en-GB", { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "Africa/Cairo" })
+    : "";
   const orderId = o?.order_id ?? placed?.order_id;
   const isInstapay = (o?.payment_method ?? placed?.payment_method) === "instapay";
   const paid = o?.payment_status === "paid";
@@ -176,7 +190,7 @@ export function OrderStatus({
   const paymentCard = (
     <section className={cn("rounded-[2rem] bg-card p-6 ring-1", awaitingPayment ? "ring-2 ring-brand-red" : "ring-border")}>
       {!isInstapay ? (
-        <p className="font-bold">{(type === "delivery" ? t.cashDelivery : t.cashPickup).replace("{amount}", egp(total, locale))}</p>
+        <p className="font-bold">{(type === "delivery" ? t.cashDelivery : isReservation ? t.cashReservation : t.cashPickup).replace("{amount}", egp(total, locale))}</p>
       ) : paid ? (
         <p className="flex items-center gap-2 font-bold text-primary">
           <CheckCircle2 className="h-5 w-5" aria-hidden /> {t.paid}
@@ -259,10 +273,15 @@ export function OrderStatus({
         <div className="space-y-6">
           <section className="relative overflow-hidden rounded-[2rem] bg-primary p-6 text-primary-foreground md:p-8">
             <p className="text-sm font-bold uppercase tracking-[0.2em] text-brand-yellow">{t.number.replace("{n}", String(orderNumber))}</p>
-            <h2 className="mt-2 text-4xl md:text-5xl">{placed && status !== "cancelled" ? t.placed : t.statuses[status]}</h2>
+            <h2 className="mt-2 text-4xl md:text-5xl">{placed && status !== "cancelled" ? (isReservation ? t.reserved : t.placed) : t.statuses[status]}</h2>
+            {isReservation && whenLabel && (
+              <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-brand-yellow px-4 py-1.5 font-extrabold text-foreground">
+                <CalendarDays className="h-4 w-4" aria-hidden /> {t.tableFor.replace("{n}", String(guests ?? "")).replace("{when}", whenLabel)}
+              </p>
+            )}
             {placed && <p className="mt-3 max-w-sm opacity-90">{t.thanks.replace("{name}", placed.name.split(" ")[0])}</p>}
             {/* Animated illustration that follows the live status (polled every 30 s) */}
-            <DeliveryScene type={type} status={status} t={t.scene} />
+            <DeliveryScene type={type === "delivery" ? "delivery" : "pickup"} status={status} t={t.scene} />
           </section>
 
           {/* Unpaid InstaPay: payment comes first so the upload box is the first thing customers see */}
@@ -343,6 +362,18 @@ export function OrderStatus({
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">{t.deliveryFee}</dt>
                 <dd className="tabular-nums">{egp(deliveryFee, locale)}</dd>
+              </div>
+            )}
+            {service > 0 && (
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">{t.service}</dt>
+                <dd className="tabular-nums">{egp(service, locale)}</dd>
+              </div>
+            )}
+            {tax > 0 && (
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">{t.vat}</dt>
+                <dd className="tabular-nums">{egp(tax, locale)}</dd>
               </div>
             )}
             <div className="flex justify-between text-lg">

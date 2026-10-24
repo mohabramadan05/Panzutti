@@ -4,11 +4,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Banknote, Clock, Loader2, Smartphone, Tag, X } from "lucide-react";
-import { OrderTypeToggle, useCartSummary } from "./cart-view";
+import { OrderTypeToggle, TotalsRows, useCartSummary } from "./cart-view";
+import { ReservationPicker } from "./reservation-picker";
 import type { Branch } from "@/lib/data";
 import { openStatus } from "@/lib/data";
 import type { Catalog } from "@/lib/catalog";
 import type { Dictionary, Locale } from "@/lib/i18n";
+import { isPickValid, slotToDate } from "@/lib/reservation";
 import { lineTotal, toOrderItems } from "@/lib/cart";
 import { saveLastOrder, type PlacedOrder } from "@/lib/last-order";
 import { supabase } from "@/lib/supabase";
@@ -47,12 +49,14 @@ export function CheckoutForm({
   locale,
   t,
   tCart,
+  tItem,
   branch,
   catalog,
 }: {
   locale: Locale;
   t: Dictionary["checkout"];
   tCart: Dictionary["cart"];
+  tItem: Pick<Dictionary["item"], "decrease" | "increase">;
   branch: Branch;
   catalog: Catalog | null;
 }) {
@@ -60,7 +64,7 @@ export function CheckoutForm({
   const s = useCartSummary(catalog, branch);
   const [c, setC] = useState<Customer>({ name: "", phone: "", email: "", address: "", addressNotes: "" });
   const [note, setNote] = useState("");
-  const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
+  const [errors, setErrors] = useState<Partial<Record<Field | "table", string>>>({});
   const [promoInput, setPromoInput] = useState("");
   const [promo, setPromo] = useState<{ code: string; discount: number } | null>(null);
   const [promoBusy, setPromoBusy] = useState(false);
@@ -71,6 +75,8 @@ export function CheckoutForm({
   const [open, setOpen] = useState(true);
   const pick = (en: string, ar: string | null) => (locale === "ar" ? ar || en : en);
   const instapayOn = branch.accepts_instapay && !!branch.instapay_address;
+  const isReservation = s.type === "reservation";
+  const dbType = isReservation ? "pickup" : s.type; // a reservation is a dine-in "pickup" order with p_reservation
 
   useEffect(() => {
     try {
@@ -106,7 +112,7 @@ export function CheckoutForm({
     const { data, error } = await supabase.rpc("validate_promo_code", {
       p_code: code,
       p_branch_id: branch.id,
-      p_type: s.type,
+      p_type: dbType,
       p_subtotal: s.subtotal,
       p_phone: normalizePhone(c.phone),
     });
@@ -117,7 +123,8 @@ export function CheckoutForm({
   };
 
   const validate = () => {
-    const er: Partial<Record<Field, string>> = {};
+    const er: Partial<Record<Field | "table", string>> = {};
+    if (isReservation && !isPickValid(s.reservation, branch)) er.table = t.pickTime;
     if (!c.name.trim()) er.name = t.required;
     if (!c.phone.trim()) er.phone = t.required;
     else if (!normalizePhone(c.phone)) er.phone = t.phoneInvalid;
@@ -125,7 +132,7 @@ export function CheckoutForm({
     if (s.type === "delivery" && !c.address.trim()) er.address = t.required;
     setErrors(er);
     const first = Object.keys(er)[0];
-    if (first) document.getElementById(`f-${first}`)?.focus();
+    if (first) document.getElementById(`f-${first}`)?.[first === "table" ? "scrollIntoView" : "focus"]();
     return !first;
   };
 
@@ -137,7 +144,7 @@ export function CheckoutForm({
     const phone = normalizePhone(c.phone)!;
     const { data, error } = await supabase.rpc("place_order", {
       p_branch_id: branch.id,
-      p_type: s.type,
+      p_type: dbType,
       p_customer_name: c.name.trim(),
       p_customer_phone: phone,
       p_customer_email: c.email.trim() || null,
@@ -148,6 +155,14 @@ export function CheckoutForm({
       p_promo_code: promo?.code ?? null,
       p_locale: locale,
       p_payment_method: method,
+      // only sent for reservations, so normal orders keep working before the v4 SQL is applied
+      ...(isReservation && s.reservation
+        ? {
+            p_reservation: true,
+            p_party_size: s.reservation.guests,
+            p_scheduled_for: slotToDate(s.reservation.date, s.reservation.slot, branch.timezone).toISOString(),
+          }
+        : {}),
     });
     if (error || !data) {
       setSubmitting(false);
@@ -160,21 +175,24 @@ export function CheckoutForm({
       // not critical
     }
     const order = data as PlacedOrder;
-    saveLastOrder({ ...order, phone, name: c.name.trim(), type: s.type });
+    saveLastOrder({ ...order, phone, name: c.name.trim(), type: s.type, party_size: isReservation ? s.reservation?.guests : undefined });
     s.clear();
+    if (isReservation) s.setReservation(null);
     router.push(`/${locale}/order?n=${order.order_number}`);
   };
 
   if (!s.ready || !s.lines.length) return <div className="h-64 animate-pulse rounded-3xl bg-muted" aria-busy />;
 
   const discount = promo?.discount ?? 0;
-  const total = Math.max(s.subtotal - discount, 0) + s.deliveryFee;
-  const blocked = !catalog || s.hasUnavailable || s.belowMinimum || !open;
+  const totals = s.totals(discount);
+  const total = totals.total;
+  // A reservation is for later, so it can be booked while the branch is closed right now
+  const blocked = !catalog || s.hasUnavailable || s.belowMinimum || (!open && !isReservation);
 
   return (
     <form onSubmit={submit} noValidate className="grid items-start gap-8 lg:grid-cols-[1.4fr_1fr]">
       <div className="space-y-8">
-        {!open && (
+        {!open && !isReservation && (
           <p className="flex items-center gap-2 rounded-2xl bg-brand-red/10 px-4 py-3 font-bold text-brand-red">
             <Clock className="h-5 w-5 shrink-0" aria-hidden /> {t.closed.replace("{time}", timeLabel(branch.opens_at, locale))}
           </p>
@@ -189,9 +207,28 @@ export function CheckoutForm({
           <p className="mt-3 text-sm text-muted-foreground">
             {s.type === "pickup"
               ? t.pickupD.replace("{branch}", pick(branch.name_en, branch.name_ar))
-              : t.deliveryD.replace("{fee}", egp(branch.delivery_fee, locale))}
+              : isReservation
+                ? t.reservationD.replace("{branch}", pick(branch.name_en, branch.name_ar))
+                : t.deliveryD.replace("{fee}", egp(branch.delivery_fee, locale))}
           </p>
         </section>
+
+        {isReservation && (
+          <section id="f-table" className="scroll-mt-24 rounded-[2rem] bg-card p-6 ring-1 ring-border">
+            <h2 className="mb-4 text-2xl text-primary">{t.table}</h2>
+            <ReservationPicker
+              value={s.reservation}
+              onChange={(r) => {
+                s.setReservation(r);
+                setErrors((er) => ({ ...er, table: undefined }));
+              }}
+              branch={branch}
+              locale={locale}
+              t={{ ...t, ...tItem }}
+              error={errors.table}
+            />
+          </section>
+        )}
 
         <section className="space-y-4 rounded-[2rem] bg-card p-6 ring-1 ring-border">
           <h2 className="text-2xl text-primary">{t.details}</h2>
@@ -221,7 +258,7 @@ export function CheckoutForm({
           <h2 className="text-2xl text-primary">{t.payment}</h2>
           <div role="radiogroup" className="mt-4 grid gap-3 sm:grid-cols-2">
             {[
-              { v: "cash" as const, Icon: Banknote, label: t.cash, d: s.type === "delivery" ? t.cashDelivery : t.cashPickup, show: true },
+              { v: "cash" as const, Icon: Banknote, label: t.cash, d: s.type === "delivery" ? t.cashDelivery : isReservation ? t.cashReservation : t.cashPickup, show: true },
               { v: "instapay" as const, Icon: Smartphone, label: t.instapay, d: t.instapayD, show: instapayOn },
             ]
               .filter((o) => o.show)
@@ -317,16 +354,7 @@ export function CheckoutForm({
               <dd className="font-bold tabular-nums">−{egp(discount, locale)}</dd>
             </div>
           )}
-          {s.type === "delivery" && (
-            <div className="flex justify-between">
-              <dt className="text-muted-foreground">{tCart.deliveryFee}</dt>
-              <dd className="font-bold tabular-nums">{egp(s.deliveryFee, locale)}</dd>
-            </div>
-          )}
-          <div className="flex justify-between border-t border-dashed border-border pt-3 text-lg">
-            <dt className="font-display text-primary">{tCart.total}</dt>
-            <dd className="font-extrabold tabular-nums text-primary">{egp(total, locale)}</dd>
-          </div>
+          <TotalsRows totals={totals} type={s.type} locale={locale} t={tCart} />
         </dl>
         {s.belowMinimum && (
           <p className="mt-4 rounded-2xl bg-brand-red/10 px-4 py-3 text-sm font-bold text-brand-red">
@@ -345,7 +373,7 @@ export function CheckoutForm({
         >
           <span className="inline-flex items-center gap-2">
             {submitting && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
-            {submitting ? t.placing : t.place}
+            {submitting ? t.placing : isReservation ? t.placeReservation : t.place}
           </span>
           <span className="tabular-nums">{egp(total, locale)}</span>
         </button>

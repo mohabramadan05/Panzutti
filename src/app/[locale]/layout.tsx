@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import "../globals.css";
 import { dirOf, getDictionary, isLocale, locales } from "@/lib/i18n";
 import { CartProvider } from "@/lib/cart";
+import { ScrollReveal } from "@/components/scroll-reveal";
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
@@ -44,6 +45,7 @@ export default async function LocaleLayout({
     <html lang={locale} dir={dirOf(locale)}>
       <body>
         <CartProvider>{children}</CartProvider>
+        <ScrollReveal />
       </body>
     </html>
   );

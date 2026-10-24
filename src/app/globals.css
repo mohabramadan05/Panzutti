@@ -28,11 +28,14 @@
   --color-primary: #1f6348;
   --color-primary-foreground: #fff2d0;
 
-  --animate-marquee: marquee 40s linear infinite;
+  --animate-marquee: marquee 90s linear infinite;
   --animate-float: float 6s ease-in-out infinite;
   --animate-fade-up: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-pop-in: pop-in 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   --animate-slide-in: slide-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+  --animate-wiggle: wiggle 2.8s ease-in-out infinite;
+  --animate-peek: peek 5s ease-in-out infinite;
+  --animate-spin-slow: spin 18s linear infinite;
 }
 
 @keyframes pop-in {
@@ -51,6 +54,14 @@
 @keyframes float {
   0%, 100% { transform: translateY(0) rotate(0); }
   50%      { transform: translateY(-10px) rotate(-1.5deg); }
+}
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-3deg); }
+  50%      { transform: rotate(3deg); }
+}
+@keyframes peek {
+  0%, 100% { transform: translateY(18%) rotate(-4deg); }
+  45%, 60% { transform: translateY(0) rotate(2deg); }
 }
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(16px); }
@@ -100,6 +111,22 @@
   background-image: radial-gradient(color-mix(in oklab, var(--color-foreground) 7%, transparent) 1px, transparent 1px);
   background-size: 6px 6px;
 }
+
+/* Scroll reveal: components/scroll-reveal.tsx adds .reveal-ready to <html> and data-shown to each
+   [data-reveal] element as it scrolls into view. Without JS (or with reduced motion) nothing is hidden.
+   Variants: data-reveal="up" (default) | "left" | "right" | "zoom" | "tilt"; delay with style={{ "--d": "120ms" }}. */
+.reveal-ready [data-reveal] {
+  opacity: 0;
+  transform: translateY(36px);
+  transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0ms), transform 0.9s cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0ms);
+}
+.reveal-ready [data-reveal="left"] { transform: translateX(-48px); }
+.reveal-ready [data-reveal="right"] { transform: translateX(48px); }
+[dir="rtl"].reveal-ready [data-reveal="left"], .reveal-ready [dir="rtl"] [data-reveal="left"] { transform: translateX(48px); }
+[dir="rtl"].reveal-ready [data-reveal="right"], .reveal-ready [dir="rtl"] [data-reveal="right"] { transform: translateX(-48px); }
+.reveal-ready [data-reveal="zoom"] { transform: scale(0.88); }
+.reveal-ready [data-reveal="tilt"] { transform: translateY(40px) rotate(-4deg); }
+.reveal-ready [data-reveal][data-shown] { opacity: 1; transform: none; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

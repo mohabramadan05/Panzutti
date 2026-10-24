@@ -47,7 +47,7 @@ export default async function FamilyPage({ params }: { params: Promise<{ locale:
                 <Camera className="h-4 w-4" aria-hidden /> {t.familyPage.share}
               </Link>
             </div>
-            <Mascot point="start" eager className="mx-auto hidden h-80 animate-float drop-shadow-xl md:block" />
+            <Mascot pose="panuozzoLove" point="start" eager className="mx-auto hidden h-80 animate-float drop-shadow-xl md:block" />
           </div>
         </section>
 

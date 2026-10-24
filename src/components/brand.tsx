@@ -1,38 +1,58 @@
-/* eslint-disable @next/next/no-img-element -- logo/mascot are transparent PNGs of unknown size */
-import { brand } from "@/lib/brand";
+/* eslint-disable @next/next/no-img-element -- transparent mascot cut-outs, sized by CSS height */
+import { FACES_RIGHT, MASCOTS, type MascotPose } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 
+/**
+ * Text wordmark (self-hosted fonts, no image request). The old logo PNGs on panzutti.com are gone;
+ * to use a real logo file later, drop it in /public/brand and render an <img> here — nothing else changes.
+ */
 export function Logo({ variant = "red", className }: { variant?: "red" | "cream"; className?: string }) {
   return (
-    <img
-      src={variant === "red" ? brand.logoRed : brand.logoCream}
-      alt="Panzutti — Panuozzo & More"
-      className={cn("h-10 w-auto object-contain", className)}
-    />
+    <span
+      role="img"
+      aria-label="Panzutti — Panuozzo & More"
+      className={cn("inline-flex h-10 flex-col items-center justify-center leading-none", variant === "red" ? "text-brand-red" : "text-brand-cream", className)}
+    >
+      <span aria-hidden className="font-script text-[2.1rem] leading-[0.95] md:text-[2.4rem]">Panzutti</span>
+      <span aria-hidden className={cn("mt-0.5 text-[0.55rem] font-extrabold uppercase tracking-[0.35em]", variant === "red" ? "text-primary" : "text-brand-yellow")}>
+        Panuozzo &amp; more
+      </span>
+    </span>
   );
 }
 
 /**
- * The Panzutti character (curly hair, cream shirt). In the drawing he points with his raised hand to
- * the viewer's left. `point` turns him so he points at the content, in English and in Arabic (RTL):
+ * The Panzutti character. `pose` picks a drawing from the mascot sheet (lib/brand.ts → MASCOTS).
+ * `point` turns him so he points/looks at the content, in English and in Arabic (RTL):
  * "start" = towards where text begins, "end" = towards where it ends.
  */
-export function Mascot({ className, point, eager }: { className?: string; point?: "start" | "end"; eager?: boolean }) {
+export function Mascot({
+  className,
+  point,
+  eager,
+  pose = "classic",
+}: {
+  className?: string;
+  point?: "start" | "end";
+  eager?: boolean;
+  pose?: MascotPose;
+}) {
+  const m = MASCOTS[pose];
+  const right = FACES_RIGHT.has(pose);
+  // In LTR "end" is the right side; in RTL it is the left side.
+  const flipLtr = point === "end" ? !right : point === "start" ? right : false;
+  const flipRtl = point === "end" ? right : point === "start" ? !right : false;
   return (
     <img
-      src={brand.mascot}
+      src={m.src}
       alt=""
       aria-hidden
       draggable={false}
       loading={eager ? "eager" : "lazy"}
-      width={525}
-      height={900}
-      className={cn(
-        "block w-auto select-none object-contain",
-        point === "end" && "ltr:-scale-x-100",
-        point === "start" && "rtl:-scale-x-100",
-        className,
-      )}
+      decoding="async"
+      width={m.w}
+      height={m.h}
+      className={cn("block w-auto select-none object-contain", flipLtr && "ltr:-scale-x-100", flipRtl && "rtl:-scale-x-100", className)}
     />
   );
 }

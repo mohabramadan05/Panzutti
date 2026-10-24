@@ -3,14 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, Bike, ImageOff, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Bike, CalendarDays, ImageOff, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { Stepper } from "./item-configurator";
 import { Mascot } from "./brand";
 import type { Branch } from "@/lib/data";
 import { withImage } from "@/lib/data";
 import type { Catalog } from "@/lib/catalog";
 import type { Dictionary, Locale } from "@/lib/i18n";
-import { MAX_LINE_QUANTITY, freshen, lineTotal, useCart, type OrderType } from "@/lib/cart";
+import { MAX_LINE_QUANTITY, estimateTotals, freshen, lineTotal, useCart, type OrderType } from "@/lib/cart";
 import { supabase } from "@/lib/supabase";
 import { egp } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -25,7 +25,7 @@ type Suggestion = {
   has_required_choices: boolean;
 };
 
-/** Pickup / delivery switch, shared by the cart and checkout. */
+/** Delivery / pickup / reservation switch, shared by the cart and checkout. */
 export function OrderTypeToggle({
   value,
   onChange,
@@ -35,14 +35,15 @@ export function OrderTypeToggle({
   value: OrderType;
   onChange: (v: OrderType) => void;
   branch: Branch;
-  t: Pick<Dictionary["cart"], "pickup" | "delivery">;
+  t: Pick<Dictionary["cart"], "pickup" | "delivery" | "reservation">;
 }) {
   const options = [
     { v: "delivery" as const, label: t.delivery, Icon: Bike, ok: branch.accepts_delivery },
     { v: "pickup" as const, label: t.pickup, Icon: ShoppingBag, ok: branch.accepts_pickup },
+    { v: "reservation" as const, label: t.reservation, Icon: CalendarDays, ok: true },
   ];
   return (
-    <div role="radiogroup" className="grid grid-cols-2 gap-1 rounded-full bg-muted p-1">
+    <div role="radiogroup" className="grid grid-cols-3 gap-1 rounded-full bg-muted p-1">
       {options.map(({ v, label, Icon, ok }) => (
         <button
           key={v}
@@ -52,14 +53,52 @@ export function OrderTypeToggle({
           disabled={!ok}
           onClick={() => onChange(v)}
           className={cn(
-            "inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-extrabold transition disabled:opacity-40",
+            "inline-flex min-w-0 items-center justify-center gap-1.5 rounded-full px-2 py-2.5 text-sm font-extrabold transition disabled:opacity-40 sm:px-4",
             value === v ? "bg-primary text-primary-foreground shadow" : "text-foreground/70 hover:text-primary",
           )}
         >
-          <Icon className="h-4 w-4" aria-hidden /> {label}
+          <Icon className="h-4 w-4 shrink-0" aria-hidden /> <span className="truncate">{label}</span>
         </button>
       ))}
     </div>
+  );
+}
+
+/** Delivery fee, 12% service (reservations), 14% VAT and total. Shared by cart and checkout (rows go inside a <dl>). */
+export function TotalsRows({
+  totals,
+  type,
+  locale,
+  t,
+}: {
+  totals: ReturnType<typeof estimateTotals>;
+  type: OrderType;
+  locale: Locale;
+  t: Pick<Dictionary["cart"], "deliveryFee" | "service" | "vat" | "total">;
+}) {
+  return (
+    <>
+      {type === "delivery" && (
+        <div className="flex justify-between">
+          <dt className="text-muted-foreground">{t.deliveryFee}</dt>
+          <dd className="font-bold tabular-nums">{egp(totals.deliveryFee, locale)}</dd>
+        </div>
+      )}
+      {type === "reservation" && (
+        <div className="flex justify-between">
+          <dt className="text-muted-foreground">{t.service}</dt>
+          <dd className="font-bold tabular-nums">{egp(totals.service, locale)}</dd>
+        </div>
+      )}
+      <div className="flex justify-between">
+        <dt className="text-muted-foreground">{t.vat}</dt>
+        <dd className="font-bold tabular-nums">{egp(totals.tax, locale)}</dd>
+      </div>
+      <div className="flex justify-between border-t border-dashed border-border pt-3 text-lg">
+        <dt className="font-display text-primary">{t.total}</dt>
+        <dd className="font-extrabold tabular-nums text-primary">{egp(totals.total, locale)}</dd>
+      </div>
+    </>
   );
 }
 
@@ -71,7 +110,9 @@ export function useCartSummary(catalog: Catalog | null, branch: Branch) {
     const subtotal = lines.reduce((s, l) => s + lineTotal(l), 0);
     const deliveryFee = cart.type === "delivery" ? branch.delivery_fee : 0;
     const belowMinimum = cart.type === "delivery" && subtotal < branch.min_delivery_order;
-    return { ...cart, lines, subtotal, deliveryFee, belowMinimum, hasUnavailable: lines.some((l) => !l.available) };
+    const rates = { taxRate: Number(branch.tax_rate ?? 0.14), serviceRate: Number(branch.service_rate ?? 0.12) };
+    const totals = (discount = 0) => estimateTotals({ subtotal, discount, deliveryFee, type: cart.type, ...rates });
+    return { ...cart, lines, subtotal, deliveryFee, belowMinimum, totals, hasUnavailable: lines.some((l) => !l.available) };
   }, [cart, catalog, branch]);
 }
 
@@ -112,7 +153,7 @@ export function CartView({
   if (!s.lines.length)
     return (
       <div className="flex flex-col items-center rounded-[2rem] bg-card px-6 py-14 text-center ring-1 ring-border">
-        <Mascot className="h-64 animate-float" />
+        <Mascot pose="hungry" className="h-64 animate-float" />
         <h2 className="mt-4 text-3xl text-primary">{t.empty}</h2>
         <p className="mt-2 max-w-sm text-muted-foreground">{t.emptyBody}</p>
         <Link href={`/${locale}/menu`} className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-extrabold text-primary-foreground">
@@ -211,16 +252,7 @@ export function CartView({
             <dt className="text-muted-foreground">{t.subtotal}</dt>
             <dd className="font-bold tabular-nums">{egp(s.subtotal, locale)}</dd>
           </div>
-          {s.type === "delivery" && (
-            <div className="flex justify-between">
-              <dt className="text-muted-foreground">{t.deliveryFee}</dt>
-              <dd className="font-bold tabular-nums">{egp(s.deliveryFee, locale)}</dd>
-            </div>
-          )}
-          <div className="flex justify-between border-t border-dashed border-border pt-3 text-lg">
-            <dt className="font-display text-primary">{t.total}</dt>
-            <dd className="font-extrabold tabular-nums text-primary">{egp(s.subtotal + s.deliveryFee, locale)}</dd>
-          </div>
+          <TotalsRows totals={s.totals()} type={s.type} locale={locale} t={t} />
         </dl>
         <p className="mt-2 text-xs text-muted-foreground">{t.estimateNote}</p>
         {s.belowMinimum && (

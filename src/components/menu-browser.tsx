@@ -126,7 +126,7 @@ export function MenuBrowser({
       <div className="mx-auto max-w-6xl px-4 pb-20 pt-4">
         {visible.length === 0 && (
           <div className="mt-10 flex flex-col items-center gap-4 rounded-3xl bg-card p-10 text-center ring-1 ring-border">
-            <Mascot className="h-44" />
+            <Mascot pose="discover" className="h-44" />
             <p className="text-lg text-muted-foreground">{t.noResults.replace("{q}", q.trim())}</p>
             <button type="button" onClick={() => setQ("")} className="inline-flex items-center gap-1 rounded-full border-2 border-primary px-5 py-2 font-bold text-primary hover:bg-primary hover:text-primary-foreground">
               <X className="h-4 w-4" aria-hidden /> {t.clear}

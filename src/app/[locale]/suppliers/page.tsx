@@ -54,7 +54,7 @@ export default async function SuppliersPage({ params }: { params: Promise<{ loca
               </>
             )}
             </div>
-            <Mascot point="start" eager className="mx-auto hidden h-80 animate-float drop-shadow-xl md:block" />
+            <Mascot pose="panuozzoWalk" point="start" eager className="mx-auto hidden h-80 animate-float drop-shadow-xl md:block" />
           </div>
         </section>
 

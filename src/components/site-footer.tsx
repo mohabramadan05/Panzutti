@@ -49,6 +49,7 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
           <h3 className="mb-3 text-lg text-brand-yellow">Panzutti</h3>
           <ul className="space-y-2 text-sm text-brand-cream/85">
             <li><Link href={`/${locale}/menu`} className="hover:underline">{t.nav.menu}</Link></li>
+            <li><Link href={`/${locale}/reserve`} className="hover:underline">{t.nav.reserve}</Link></li>
             <li><Link href={`/${locale}/track`} className="hover:underline">{t.nav.track}</Link></li>
             <li><Link href={`/${locale}/family`} className="hover:underline">{t.nav.family}</Link></li>
             <li><Link href={`/${locale}/careers`} className="hover:underline">{t.join.team}</Link></li>
