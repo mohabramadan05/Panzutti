@@ -1,0 +1,16 @@
+# PANZUTTI roadmap
+- [x] Backend schema, ordering/points/reservation logic, live order updates
+- [x] Public pages: home, menu, product, cart, checkout, orders, account, club, reservations, journal, contact, policies
+- [x] Reference design applied (fonts, hero, menu list, club band, admin sidebar)
+- [x] Admin dashboard (orders, reservations, menu+options, customers/points, loyalty, promotions, articles, content/settings, hours, delivery areas)
+- [x] Ordering system: Order Now (delivery / pickup / dine-in), guest checkout, cash only, duplicate-proof order placing
+- [x] Kitchen timing: per-item prep time, configurable rule (longest item + buffer, or sum), pickup slots with capacity, delivery = kitchen + dispatch + travel
+- [x] Live tracking page per order type at /track/<private token> (auto-refresh, timestamps, driver name + call, maps + call for the restaurant)
+- [x] Orders board with tabs, step buttons, reject/cancel with reason, adjust time with reason, driver assignment with history
+- [x] Delivery staff management (add/edit, active/on shift, filters, history)
+- [ ] End-to-end order test on the live site — needs at least one priced, published product and one delivery area
+- [ ] Customer notifications (WhatsApp/SMS/email) — events are queued in `order_notifications`; no sender connected yet
+- [ ] Online card payment — blocked: payment provider choice + keys
+- [ ] Official mascot art — blocked: files from user
+- [ ] Real content — blocked: prices/photos, delivery areas, confirmed opening hours, phone/socials
+- [ ] Owner review of timing defaults (Admin → Content & settings → Ordering status & kitchen timing)

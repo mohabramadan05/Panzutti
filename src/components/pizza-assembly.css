@@ -1,0 +1,244 @@
+/* Pizza assembly section. Illustrative CSS shapes, brand colours from globals.css @theme. */
+
+.pz-section {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 85% 20%, color-mix(in oklab, var(--color-brand-yellow, #fed900) 30%, transparent), transparent 45%),
+    var(--color-brand-cream, #fff2d0);
+}
+.pz-inner {
+  margin-inline: auto;
+  display: grid;
+  max-width: 72rem;
+  align-items: center;
+  gap: 3rem;
+  padding: 4rem 1rem;
+}
+@media (min-width: 768px) {
+  .pz-inner { grid-template-columns: 1fr 1fr; padding-block: 5rem; }
+}
+
+/* ---------- copy */
+.pz-kicker {
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-brand-red, #c01d2e);
+}
+.pz-title { font-size: clamp(2.25rem, 5vw, 3rem); color: var(--color-primary, #1f6348); }
+.pz-body { margin-top: 1rem; max-width: 28rem; font-size: 1.125rem; color: color-mix(in oklab, var(--color-foreground, #16352a) 80%, transparent); }
+
+.pz-step {
+  margin-top: 2rem;
+  min-height: 7.5rem;
+  max-width: 28rem;
+  border-radius: 1.5rem;
+  background: var(--color-card, #fffaec);
+  padding: 1rem 1.25rem;
+  box-shadow: inset 0 0 0 1px var(--color-border, #ecdcb0);
+}
+.pz-step-count { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--color-muted-foreground, #5b6f63); }
+.pz-step-title { margin-top: 0.25rem; font-size: 2rem; line-height: 1.1; color: var(--color-brand-red, #c01d2e); }
+.pz-step-desc { margin-top: 0.25rem; color: color-mix(in oklab, var(--color-foreground, #16352a) 80%, transparent); }
+
+.pz-dots { margin-top: 1.25rem; display: flex; gap: 0.5rem; }
+.pz-dot {
+  height: 0.625rem;
+  width: 0.625rem;
+  border-radius: 9999px;
+  background: var(--color-border, #ecdcb0);
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+.pz-dot.is-on { background: var(--color-primary, #1f6348); }
+.pz-dot.is-current { width: 1.75rem; background: var(--color-brand-red, #c01d2e); }
+
+.pz-actions { margin-top: 1.5rem; display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; }
+.pz-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  background: var(--color-primary, #1f6348);
+  padding: 0.875rem 1.75rem;
+  font-weight: 800;
+  color: var(--color-primary-foreground, #fff2d0);
+  box-shadow: 0 10px 25px -8px color-mix(in oklab, var(--color-primary, #1f6348) 50%, transparent);
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+.pz-button:hover { transform: translateY(-2px); background: var(--color-brand-red, #c01d2e); }
+.pz-button:active { transform: translateY(0) scale(0.97); }
+.pz-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 700;
+  color: var(--color-primary, #1f6348);
+  text-underline-offset: 4px;
+}
+.pz-link:hover { text-decoration: underline; }
+
+/* ---------- pizza stage */
+.pz-stage {
+  position: relative;
+  margin-inline: auto;
+  width: min(80vw, 380px);
+  aspect-ratio: 1;
+}
+/* wooden peel behind the pizza */
+.pz-board {
+  position: absolute;
+  inset: -6%;
+  border-radius: 9999px;
+  background:
+    repeating-linear-gradient(100deg, transparent 0 14px, rgb(0 0 0 / 0.05) 14px 16px),
+    radial-gradient(circle, #c8925a, #a8743f);
+  box-shadow: 0 30px 50px -20px rgb(22 53 42 / 0.45);
+}
+
+.pizza {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 9999px;
+}
+.pizza > div,
+.pizza-dough,
+.pizza-sauce,
+.pizza-cheese { position: absolute; border-radius: 9999px; }
+
+/* golden crust with leopard spotting from the wood-fired oven */
+.pizza-dough {
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(circle at 22% 14%, rgb(90 52 22 / 0.7) 0 1.2%, transparent 2.6%),
+    radial-gradient(circle at 79% 12%, rgb(90 52 22 / 0.6) 0 1%, transparent 2.2%),
+    radial-gradient(circle at 95% 46%, rgb(90 52 22 / 0.7) 0 1.3%, transparent 2.7%),
+    radial-gradient(circle at 87% 77%, rgb(90 52 22 / 0.55) 0 1%, transparent 2.2%),
+    radial-gradient(circle at 31% 92%, rgb(90 52 22 / 0.65) 0 1.2%, transparent 2.5%),
+    radial-gradient(circle at 5% 57%, rgb(107 66 32 / 0.6) 0 1.1%, transparent 2.4%),
+    radial-gradient(circle, #f4d38f 0 58%, #e8b866 70%, #c98a3d 100%);
+  border: 6px solid #d9a050;
+  box-shadow: inset 0 0 0 10px rgb(201 138 61 / 0.35), inset 0 -8px 18px rgb(90 52 22 / 0.35);
+}
+
+.pizza-sauce {
+  inset: 9%;
+  z-index: 2;
+  background:
+    radial-gradient(circle at 35% 30%, rgb(255 255 255 / 0.18), transparent 35%),
+    radial-gradient(circle at 70% 70%, #9e1624 0 6%, transparent 18%),
+    radial-gradient(circle, #d43a2a, #b5202a);
+  box-shadow: inset 0 0 12px rgb(80 0 0 / 0.45);
+}
+
+/* mozzarella: uneven melted pools */
+.pizza-cheese {
+  inset: 14%;
+  z-index: 3;
+  border-radius: 46% 54% 50% 50% / 52% 46% 54% 48%;
+  background:
+    radial-gradient(circle at 30% 35%, #fffbe8 0 12%, transparent 20%),
+    radial-gradient(circle at 68% 30%, #fff6d2 0 10%, transparent 18%),
+    radial-gradient(circle at 55% 68%, #fffbe8 0 14%, transparent 22%),
+    radial-gradient(circle at 25% 70%, #fff2c0 0 8%, transparent 15%),
+    radial-gradient(circle at 80% 60%, #fff2c0 0 7%, transparent 14%),
+    radial-gradient(circle, #ffe9a3 0 60%, rgb(255 233 163 / 0.85) 75%, rgb(255 225 140 / 0.5));
+  box-shadow: 0 0 10px rgb(255 238 180 / 0.8);
+}
+
+/* ---------- toppings: positioned by .pz-spot, animated by Motion */
+.pz-spot {
+  position: absolute;
+  z-index: 4;
+  width: 0;
+  height: 0;
+}
+.pepperoni,
+.mushroom,
+.basil { position: absolute; transform-origin: center; }
+
+.pepperoni { aspect-ratio: 1; }
+.pz-spot .pepperoni,
+.pz-spot .mushroom,
+.pz-spot .basil { left: 0; top: 0; translate: -50% -50%; }
+.pz-spot .pepperoni {
+  width: calc(var(--pz-size, 380px) * 0.12);
+  border-radius: 9999px;
+  background:
+    radial-gradient(circle at 30% 35%, #f29a8a 0 7%, transparent 11%),
+    radial-gradient(circle at 65% 60%, #f29a8a 0 6%, transparent 10%),
+    radial-gradient(circle at 45% 75%, #f7b2a3 0 5%, transparent 9%),
+    radial-gradient(circle, #c0392b 0 62%, #8e1f19 100%);
+  box-shadow: 0 2px 3px rgb(80 0 0 / 0.35);
+}
+
+/* mushroom slice: cap + stem */
+.pz-spot .mushroom {
+  width: calc(var(--pz-size, 380px) * 0.1);
+  height: calc(var(--pz-size, 380px) * 0.09);
+  border-radius: 55% 55% 20% 20% / 75% 75% 25% 25%;
+  background: linear-gradient(#d9bf98, #c4a275);
+  border: 2px solid #8a6a43;
+  box-shadow: 0 2px 3px rgb(60 40 20 / 0.3);
+}
+.pz-spot .mushroom::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -35%;
+  width: 34%;
+  height: 50%;
+  translate: -50% 0;
+  border-radius: 0 0 40% 40%;
+  background: #e8d4b4;
+  border: 2px solid #8a6a43;
+  border-top: none;
+}
+
+/* basil leaf with a centre vein */
+.pz-spot .basil {
+  width: calc(var(--pz-size, 380px) * 0.1);
+  height: calc(var(--pz-size, 380px) * 0.055);
+  border-radius: 0 100% 0 100%;
+  background: linear-gradient(135deg, #3f9a4a, #1f6a2e);
+  box-shadow: 0 2px 3px rgb(0 40 0 / 0.3);
+}
+.pz-spot .basil::after {
+  content: "";
+  position: absolute;
+  inset: 48% 8% auto 8%;
+  height: 1.5px;
+  rotate: 28deg;
+  background: rgb(255 255 255 / 0.35);
+}
+
+/* "Ready!" sticker, same red sticker as the rest of the site */
+.pz-sticker {
+  position: absolute;
+  z-index: 10;
+  top: -6%;
+  inset-inline-end: -4%;
+  display: flex;
+  height: 6.5rem;
+  width: 6.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: var(--color-brand-red, #c01d2e);
+  font-size: 1.75rem;
+  color: var(--color-brand-cream, #fff2d0);
+  box-shadow: 0 12px 24px -8px rgb(0 0 0 / 0.35);
+}
+
+.pz-stage { --pz-size: min(80vw, 380px); }
+
+@media (max-width: 480px) {
+  .pz-inner { padding-block: 3rem; gap: 2.5rem; }
+  .pz-stage { width: min(78vw, 320px); --pz-size: min(78vw, 320px); }
+  .pz-sticker { height: 5rem; width: 5rem; font-size: 1.35rem; }
+}

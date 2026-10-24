@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+/* Brand fonts, self-hosted from npm (no requests to Google) */
+@import "@fontsource-variable/fraunces";
+@import "@fontsource-variable/dm-sans";
+@import "@fontsource/yellowtail";
+@import "@fontsource/lalezar";
+
+/* Brand: green #1F6348 · red #C01D2E · cream #FFF2D0 · yellow #FED900 */
+@theme {
+  --font-display: "Fraunces Variable", Georgia, serif;
+  --font-script: "Yellowtail", cursive;
+  --font-sans: "DM Sans Variable", system-ui, sans-serif;
+  --font-arabic: "Lalezar", "Cairo", system-ui, sans-serif;
+
+  --color-brand-green: #1f6348;
+  --color-brand-green-dark: #154733;
+  --color-brand-red: #c01d2e;
+  --color-brand-cream: #fff2d0;
+  --color-brand-yellow: #fed900;
+
+  --color-background: #fff2d0;
+  --color-foreground: #16352a;
+  --color-card: #fffaec;
+  --color-muted: #f6e9c6;
+  --color-muted-foreground: #5b6f63;
+  --color-border: #ecdcb0;
+  --color-primary: #1f6348;
+  --color-primary-foreground: #fff2d0;
+
+  --animate-marquee: marquee 40s linear infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-fade-up: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-pop-in: pop-in 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  --animate-slide-in: slide-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+}
+
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(24px) scale(0.92); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes slide-in {
+  from { opacity: 0; transform: translateY(60px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50%      { transform: translateY(-10px) rotate(-1.5deg); }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@layer base {
+  * { border-color: var(--color-border); }
+  html, body { overflow-x: clip; }
+  html { scroll-behavior: smooth; }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, .font-display {
+    font-family: var(--font-display);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+  /* Arabic pages: headings in Lalezar, body in the system Arabic font */
+  [dir="rtl"] h1, [dir="rtl"] h2, [dir="rtl"] h3, [dir="rtl"] .font-display {
+    font-family: var(--font-arabic);
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 1.25;
+  }
+  [dir="rtl"] body { font-family: "Segoe UI", Tahoma, var(--font-sans); }
+  :focus-visible { outline: 3px solid var(--color-brand-yellow); outline-offset: 3px; border-radius: 6px; }
+}
+
+@utility font-script {
+  font-family: var(--font-script);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+@utility font-arabic {
+  font-family: var(--font-arabic);
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.2;
+}
+/* Dotted texture used behind the hero */
+@utility grain {
+  background-image: radial-gradient(color-mix(in oklab, var(--color-foreground) 7%, transparent) 1px, transparent 1px);
+  background-size: 6px 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  html { scroll-behavior: auto; }
+}

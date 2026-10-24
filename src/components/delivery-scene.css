@@ -1,0 +1,56 @@
+/* Delivery scene on the order page. All motion is CSS, so the global
+   prefers-reduced-motion rule in globals.css turns it into a still picture. */
+
+.ds-wheel {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.ds-driving .ds-wheel { animation: ds-spin 0.45s linear infinite; }
+.ds-driving .ds-road  { animation: ds-dash 0.6s linear infinite; }
+.ds-driving .ds-sky   { animation: ds-skyline 14s linear infinite; }
+.ds-driving .ds-bob   { animation: ds-bob 0.35s ease-in-out infinite; }
+.ds-driving .ds-wind  { opacity: 1; }
+
+.ds-idle .ds-bob { animation: ds-idle 2.4s ease-in-out infinite; }
+
+/* scooter travels between shop, road and house */
+.ds-scooter {
+  transition: transform 2.6s cubic-bezier(0.6, 0, 0.25, 1);
+}
+
+.ds-steam {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  opacity: 0;
+  animation: ds-steam 2.4s ease-out infinite;
+}
+.ds-steam:nth-of-type(2) { animation-delay: 0.8s; }
+.ds-steam:nth-of-type(3) { animation-delay: 1.6s; }
+
+.ds-glow { animation: ds-glow 1.6s ease-in-out infinite; }
+
+.ds-pop {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ds-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both, ds-float 2.2s ease-in-out 0.6s infinite;
+}
+
+.ds-wind { opacity: 0; transition: opacity 0.4s; }
+.ds-wind line { animation: ds-wind 0.7s linear infinite; }
+.ds-wind line:nth-child(2) { animation-delay: 0.25s; }
+.ds-wind line:nth-child(3) { animation-delay: 0.5s; }
+
+@keyframes ds-spin    { to { transform: rotate(360deg); } }
+@keyframes ds-dash    { to { stroke-dashoffset: -84; } }
+@keyframes ds-skyline { to { transform: translateX(-640px); } }
+@keyframes ds-bob     { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2.5px); } }
+@keyframes ds-idle    { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1px); } }
+@keyframes ds-steam {
+  0%   { opacity: 0; transform: translateY(0) scale(0.6); }
+  25%  { opacity: 0.85; }
+  100% { opacity: 0; transform: translateY(-30px) scale(1.5); }
+}
+@keyframes ds-glow  { 0%, 100% { opacity: 0.75; } 50% { opacity: 1; } }
+@keyframes ds-pop   { from { transform: scale(0); } to { transform: scale(1); } }
+@keyframes ds-float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -5px; } }
+@keyframes ds-wind  { from { transform: translateX(0); opacity: 0.9; } to { transform: translateX(-26px); opacity: 0; } }

@@ -1,0 +1,113 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-display: "Fraunces", Georgia, serif;
+  --font-script: "Yellowtail", cursive;
+  --font-sans: "DM Sans", system-ui, sans-serif;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-brand-red: var(--brand-red);
+  --color-brand-yellow: var(--brand-yellow);
+  --color-brand-cream: var(--brand-cream);
+  --color-brand-green: var(--brand-green);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  --radius: 1rem;
+  /* Brand: green #1F6348, red #C01D2E, cream #FFF2D0, yellow #FED900 */
+  --brand-green: oklch(0.43 0.075 163);
+  --brand-red: oklch(0.52 0.19 22);
+  --brand-cream: oklch(0.96 0.045 88);
+  --brand-yellow: oklch(0.89 0.18 98);
+  --background: var(--brand-cream);
+  --foreground: oklch(0.24 0.04 163);
+  --card: oklch(0.985 0.02 88);
+  --card-foreground: var(--foreground);
+  --popover: oklch(0.985 0.02 88);
+  --popover-foreground: var(--foreground);
+  --primary: var(--brand-green);
+  --primary-foreground: var(--brand-cream);
+  --secondary: oklch(0.92 0.06 90);
+  --secondary-foreground: var(--foreground);
+  --muted: oklch(0.92 0.04 88);
+  --muted-foreground: oklch(0.45 0.04 150);
+  --accent: var(--brand-yellow);
+  --accent-foreground: oklch(0.24 0.04 163);
+  --destructive: var(--brand-red);
+  --destructive-foreground: var(--brand-cream);
+  --border: oklch(0.86 0.05 90);
+  --input: oklch(0.86 0.05 90);
+  --ring: var(--brand-green);
+  --chart-1: var(--brand-green);
+  --chart-2: var(--brand-red);
+  --chart-3: var(--brand-yellow);
+  --chart-4: oklch(0.6 0.1 163);
+  --chart-5: oklch(0.7 0.12 40);
+  --sidebar: oklch(0.985 0.02 88);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--brand-green);
+  --sidebar-primary-foreground: var(--brand-cream);
+  --sidebar-accent: var(--secondary);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--brand-green);
+}
+
+@layer base {
+  * { border-color: var(--color-border); }
+  html, body { overflow-x: clip; }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+  }
+  h1, h2, h3, .font-display { font-family: var(--font-display); font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; }
+  .font-script { font-family: var(--font-script); font-weight: 400; letter-spacing: 0; }
+  .font-arabic { font-family: "Lalezar", "Cairo", system-ui, sans-serif; font-weight: 400; letter-spacing: 0; line-height: 1.2; }
+}
+
+@utility grain {
+  background-image: radial-gradient(color-mix(in oklch, var(--foreground) 6%, transparent) 1px, transparent 1px);
+  background-size: 6px 6px;
+}

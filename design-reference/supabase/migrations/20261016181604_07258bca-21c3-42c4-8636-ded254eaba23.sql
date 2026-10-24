@@ -1,0 +1,10 @@
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
+revoke execute on function public.orders_status_change() from public, anon, authenticated;
+revoke execute on function public.points_balance(uuid) from public, anon, authenticated;
+revoke execute on function public.place_order(jsonb) from public;
+revoke execute on function public.create_reservation(date,time,int,text,text,text) from public;
+revoke execute on function public.cancel_my_reservation(uuid) from public;
+revoke execute on function public.admin_adjust_points(uuid,int,text) from public;
+revoke execute on function public.admin_customers() from public;
+revoke execute on function public.my_points_balance() from public;
+grant execute on function public.place_order(jsonb), public.create_reservation(date,time,int,text,text,text), public.cancel_my_reservation(uuid), public.admin_adjust_points(uuid,int,text), public.admin_customers(), public.my_points_balance() to authenticated;
