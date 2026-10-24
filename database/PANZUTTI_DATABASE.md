@@ -679,4 +679,5 @@ Anyone can now share a photo **without an account**. Every photo still waits for
   `place_order` gained `p_reservation boolean = false` and `p_party_size int` (old signature dropped and recreated; existing callers keep working). Reservation emails always reach the restaurant.
 - `place_order`, `track_order` return `service_total`, `tax_total`, `is_reservation`, `party_size`.
 - `find_orders_by_phone`: last 7 days + upcoming reservations, max 20 — the /track page now works with the phone only.
+- `report_tax_summary(p_from, p_to, p_branch_id?)` (staff/admin): VAT collected, service charge, revenue before VAT, reservations booked/completed and guests — used by the admin Reports page.
 - The `send-emails` Edge Function prints Service/VAT lines and the number of guests (redeploy it after the SQL).

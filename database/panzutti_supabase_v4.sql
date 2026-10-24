@@ -445,3 +445,32 @@ BEGIN
   PERFORM public.queue_email('order_confirmation_customer', v.customer_email, v_data, v.locale);
 END;
 $$;
+
+-- ---------------------------------------------------------------- 6. report: VAT, service and reservations (admin Reports page)
+-- Same rules as the other report_* functions: completed orders, business day, staff see their branch.
+CREATE OR REPLACE FUNCTION public.report_tax_summary(p_from date, p_to date, p_branch_id uuid DEFAULT NULL)
+RETURNS TABLE(vat_total bigint, service_total bigint, net_before_tax bigint,
+              reservations_placed bigint, reservations_completed bigint, reservation_guests bigint)
+LANGUAGE plpgsql STABLE SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $
+DECLARE v_scope uuid := public.report_scope(p_branch_id, p_from, p_to);
+BEGIN
+  RETURN QUERY
+  SELECT COALESCE(sum(o.tax_total)     FILTER (WHERE o.status = 'completed'), 0)::bigint,
+         COALESCE(sum(o.service_total) FILTER (WHERE o.status = 'completed'), 0)::bigint,
+         COALESCE(sum(o.total - o.tax_total) FILTER (WHERE o.status = 'completed'), 0)::bigint,
+         count(o.id) FILTER (WHERE o.is_reservation),
+         count(o.id) FILTER (WHERE o.is_reservation AND o.status = 'completed'),
+         COALESCE(sum(o.party_size) FILTER (WHERE o.is_reservation AND o.status <> 'cancelled'), 0)::bigint
+  FROM public.orders o
+  JOIN public.branches b ON b.id = o.branch_id
+  WHERE (v_scope IS NULL OR o.branch_id = v_scope)
+    AND public.business_date(o.created_at, b.timezone) BETWEEN p_from AND p_to;
+END;
+$;
+REVOKE ALL ON FUNCTION public.report_tax_summary(date, date, uuid) FROM public, anon;
+GRANT EXECUTE ON FUNCTION public.report_tax_summary(date, date, uuid) TO authenticated;
+
+-- Make the API (PostgREST) see the new place_order signature right away
+NOTIFY pgrst, 'reload schema';

@@ -261,7 +261,7 @@ The server validates sold-out items, required groups (`min_select`/`max_select`)
 ---
 
 ## 8. Things the owner still has to do (not code)
-- **Run `database/panzutti_supabase_v4.sql`** (Supabase → SQL Editor, whole file): VAT, service charge, reservations, phone-only tracking. Then redeploy the `send-emails` Edge Function (it now prints VAT/service lines). The admin project should show `tax_total`, `service_total`, `is_reservation`, `party_size`.
+- **Run `database/panzutti_supabase_v4.sql`** (Supabase → SQL Editor, whole file): VAT, service charge, reservations, phone-only tracking. Then redeploy the `send-emails` Edge Function (it now prints VAT/service lines). The admin panel already shows reservations (board filter "tables", dashboard list), VAT/service lines and a VAT report (`report_tax_summary`, also in v4).
 - Drop the real logo files into `public/brand/` and render them in `Logo` (`components/brand.tsx`) — the old panzutti.com logo/photo URLs return 404.
 - **Run the guest-upload SQL** (not applied yet — the migration tool was declined): Supabase → SQL Editor → paste the section `v3 (2)` of `database/panzutti_supabase_v3.sql` (from `CREATE OR REPLACE FUNCTION public.guest_family_upload_allowed()` to the end) → Run. Until then, guests on `/family/share` get an upload error; signed-in sharing is unaffected.
 - Supabase → Edge Functions → Secrets: add `GMAIL_USER` and `GMAIL_APP_PASSWORD` (a Gmail App Password). Optionally add `SITE_URL` and `EMAIL_REPLY_TO`.
