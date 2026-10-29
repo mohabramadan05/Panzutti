@@ -63,7 +63,7 @@ export function SiteHeader({ locale, t }: { locale: Locale; t: Dictionary["nav"]
             className="hidden items-center gap-1.5 rounded-full px-3 py-2 text-sm font-bold text-foreground/80 hover:bg-muted sm:inline-flex"
           >
             <Globe className="h-4 w-4" aria-hidden />
-            <span className={other === "ar" ? "font-arabic text-base" : ""}>{t.language}</span>
+            <span className={cn("lg:max-xl:sr-only", other === "ar" && "font-arabic text-base")}>{t.language}</span>
           </Link>
           <Link
             href={`/${locale}/cart`}

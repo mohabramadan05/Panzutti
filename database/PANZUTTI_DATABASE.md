@@ -695,3 +695,12 @@ Run after v4. A customer is their phone number (`normalize_phone()` format). No 
 - **Spending:** `place_order(..., p_redeem_points integer DEFAULT 0)`. Whole blocks of `loyalty_redeem_points`, capped at what is left after the promo; deducted at placement with a conditional UPDATE (no double spend). The result also has `points_redeemed` and `points_discount`.
 - **RPCs:** `get_loyalty(p_phone)` → `{enabled, points, points_per_order, redeem_points, redeem_value}` (anon); `admin_adjust_points(p_phone, p_delta, p_note?)` (admin).
 - **Note:** `report_promo_usage` and anything else that sums `discount_total` now includes points discounts; use `points_discount` to separate them.
+
+---
+
+## 14. v6 additions (2026-10-29) — `panzutti_supabase_v6.sql`: cashier and driver roles
+
+- `user_role` gains `cashier` and `driver`. `is_staff()` = staff, admin, cashier; `can_access_branch()` includes cashier. `report_scope()` is unchanged, so cashiers and drivers get no reports.
+- **Drivers:** `orders.driver_id`; RLS policy "Drivers view their delivery orders" (delivery orders of their branch that are `ready` and unassigned, or assigned to them). RPCs `driver_take_order(p_order_id)` (ready → out_for_delivery, assigns them) and `driver_complete_order(p_order_id)` (→ completed, cash marked paid; unpaid InstaPay refused). `is_driver_for(branch_id)` helper.
+- **Staff:** `assign_driver(p_order_id, p_driver_id | null)`.
+- **Users:** Edge Function `supabase/functions/admin-users` (admin-only; `create` a login with role + branch, `set_password`). Role/branch/active changes are plain `UPDATE profiles` (admins only, by RLS + `protect_profile_fields`).

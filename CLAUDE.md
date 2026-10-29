@@ -30,6 +30,7 @@ Owner: Mohab. Client: **Panzutti**, a panuozzo (wood-fired Neapolitan sandwich-p
 | Panzutti Family wall `/family` + share page `/family/share` (anyone can upload with a name; optional Google sign-in adds "your photos"; every photo needs admin approval) | ✅ Built — guest upload needs the v3 (2) SQL run (see section 8) |
 | Join our team `/careers` + Become a supplier `/suppliers` (shared `components/application-form.tsx` → optional file to `applications/incoming/…` → `submit_application`; open positions/categories via `getJoinData()`) | ✅ Built — validation tested; no real application sent yet |
 | Admin / staff panel — **separate project `D:\work\Panzutti-Admin`** (port 3001; orders board with Realtime, InstaPay review, sold-out/prices, family photos, applications, reports). See its README for giving staff access | ✅ Built — untested with a real login until the first admin account exists |
+| Roles: admin, staff, cashier (no reports), driver (admin panel `/deliveries` only); admin creates users and sets roles at `/users` (`database/panzutti_supabase_v6.sql` + Edge Function `supabase/functions/admin-users`) | ✅ Built — **needs v6 SQL run + `admin-users` deployed** |
 
 ### How we got here
 1. Analysed panzutti.com.
@@ -187,7 +188,7 @@ Full details: `database/PANZUTTI_DATABASE.md`. Project ref `dpwsssmwarxntplorgtl
 - **Community:** `family_photos`, `job_positions`, `service_categories`, `applications`
 
 ### Enums
-- `user_role`: customer, staff, admin
+- `user_role`: customer, staff, admin, cashier, driver (v6)
 - `order_type`: pickup, delivery
 - `order_status`: pending, confirmed, preparing, ready, out_for_delivery, completed, cancelled
 - `payment_status`: unpaid, paid

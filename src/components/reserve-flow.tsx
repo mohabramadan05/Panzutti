@@ -50,7 +50,7 @@ export function ReserveFlow({
   if (!cart.ready) return <div className="h-96 animate-pulse rounded-[2rem] bg-muted" aria-busy />;
 
   return (
-    <div className="grid items-start gap-8 lg:grid-cols-[1.3fr_1fr]">
+    <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] [&>*]:min-w-0">
       <section data-reveal="up" className="rounded-[2rem] bg-card p-6 ring-1 ring-border md:p-8">
         <h2 className="mb-5 text-2xl text-primary md:text-3xl">{t.when}</h2>
         <ReservationPicker

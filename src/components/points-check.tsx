@@ -72,7 +72,7 @@ export function PointsCheck({ locale, t }: { locale: Locale; t: Dictionary["poin
   const celebrate = !!d?.enabled && points > 0;
 
   return (
-    <div className="grid items-center gap-10 md:grid-cols-2">
+    <div className="grid items-center gap-10 md:grid-cols-2 [&>*]:min-w-0">
       {/* stage: the character, his speech bubble and the star burst */}
       <div className="relative mx-auto flex h-[22rem] w-full max-w-sm items-end justify-center md:h-[28rem]">
         <div className="absolute inset-x-6 bottom-0 h-1/2 rounded-full bg-brand-yellow/50 blur-2xl" aria-hidden />
@@ -127,7 +127,7 @@ export function PointsCheck({ locale, t }: { locale: Locale; t: Dictionary["poin
         <AnimatePresence mode="wait">
           <motion.p
             key={bubble}
-            className="absolute end-0 top-2 z-20 max-w-44 rounded-3xl rounded-es-md bg-card px-4 py-3 text-sm font-bold shadow-lg ring-1 ring-border"
+            className="absolute end-2 top-2 z-20 max-w-44 rounded-3xl rounded-es-md bg-card px-4 py-3 text-sm font-bold shadow-lg ring-1 ring-border"
             initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.6, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: reduce ? 1 : 0.8 }}

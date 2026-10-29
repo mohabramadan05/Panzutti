@@ -365,7 +365,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
                 <span aria-hidden className="absolute start-6 top-5 -rotate-6 font-script text-6xl text-brand-cream md:text-7xl">Ciao!</span>
                 <Mascot pose="panuozzoGreeting" point="start" className="relative h-[88%] animate-float drop-shadow-2xl" />
               </div>
-              <Mascot pose="stickerSatisfied" className="absolute -end-3 -top-8 h-24 rotate-12 animate-wiggle drop-shadow-lg md:h-28" />
+              <Mascot pose="stickerSatisfied" className="absolute end-1 -top-8 h-24 xl:-end-3 rotate-12 animate-wiggle drop-shadow-lg md:h-28" />
             </div>
           </div>
         </section>
