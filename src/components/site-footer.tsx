@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Instagram, Facebook, MapPin, Phone, Mail, Clock } from "lucide-react";
-import { Logo, Mascot } from "./brand";
+import { Logo } from "./brand";
 import { brand } from "@/lib/brand";
 import { getMenuData } from "@/lib/data";
 import { getDictionary, type Locale } from "@/lib/i18n";
@@ -26,8 +26,6 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
   const year = new Date().getFullYear();
   return (
     <footer className="relative bg-brand-green-dark text-brand-cream">
-      {/* The character stands on the footer's top edge on every page, pointing back at the content */}
-      <Mascot point="start" className="pointer-events-none absolute -top-20 end-3 h-28 drop-shadow-xl md:-top-40 md:end-10 md:h-52" />
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 md:grid-cols-[1.3fr_1fr_1fr_1fr]">
         <div>
           <Logo variant="cream" className="h-14" />
@@ -51,6 +49,7 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
             <li><Link href={`/${locale}/menu`} className="hover:underline">{t.nav.menu}</Link></li>
             <li><Link href={`/${locale}/reserve`} className="hover:underline">{t.nav.reserve}</Link></li>
             <li><Link href={`/${locale}/track`} className="hover:underline">{t.nav.track}</Link></li>
+            <li><Link href={`/${locale}/points`} className="hover:underline">{t.nav.points}</Link></li>
             <li><Link href={`/${locale}/family`} className="hover:underline">{t.nav.family}</Link></li>
             <li><Link href={`/${locale}/careers`} className="hover:underline">{t.join.team}</Link></li>
             <li><Link href={`/${locale}/suppliers`} className="hover:underline">{t.join.supplier}</Link></li>

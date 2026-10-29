@@ -58,7 +58,7 @@ export default async function MenuPage({ params }: { params: Promise<{ locale: s
             </div>
             <div className="relative hidden md:block">
               <div className="relative aspect-[5/3] rotate-2 overflow-hidden rounded-[2rem] bg-brand-green-dark shadow-2xl ring-8 ring-brand-cream">
-                <Image src={brand.photos.hero} alt="" fill priority sizes="440px" className="object-cover" />
+                <Image src={brand.photos.signature} alt="" fill priority sizes="440px" className="object-cover" />
               </div>
               <Mascot pose="panuozzoExcited" point="end" eager className="absolute -bottom-12 -start-20 h-60 animate-float drop-shadow-xl" />
             </div>

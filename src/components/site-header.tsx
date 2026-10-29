@@ -33,6 +33,7 @@ export function SiteHeader({ locale, t }: { locale: Locale; t: Dictionary["nav"]
     { href: `/${locale}/family`, label: t.family },
     { href: `/${locale}#visit`, label: t.visit },
     { href: `/${locale}/track`, label: t.track },
+    { href: `/${locale}/points`, label: t.points },
   ];
 
   return (
@@ -47,9 +48,9 @@ export function SiteHeader({ locale, t }: { locale: Locale; t: Dictionary["nav"]
           <Logo className="h-10 md:h-12" />
         </Link>
 
-        <nav aria-label="Main" className="hidden items-center gap-1 lg:flex">
+        <nav aria-label="Main" className="hidden items-center gap-0.5 lg:flex">
           {links.map((l) => (
-            <Link key={l.href} href={l.href} className="whitespace-nowrap rounded-full px-2.5 py-2 text-sm font-bold text-foreground/80 transition hover:bg-muted hover:text-primary xl:px-4">
+            <Link key={l.href} href={l.href} className="whitespace-nowrap rounded-full px-2 py-2 text-sm font-bold text-foreground/80 transition hover:bg-muted hover:text-primary xl:px-3">
               {l.label}
             </Link>
           ))}
@@ -78,7 +79,7 @@ export function SiteHeader({ locale, t }: { locale: Locale; t: Dictionary["nav"]
           </Link>
           <Link
             href={`/${locale}/menu`}
-            className="hidden items-center gap-2 rounded-full bg-brand-red px-4 sm:inline-flex py-2.5 text-sm font-extrabold text-brand-cream shadow-lg shadow-brand-red/25 transition hover:brightness-110"
+            className="hidden shrink-0 items-center gap-2 whitespace-nowrap rounded-full bg-brand-red px-4 sm:inline-flex py-2.5 text-sm font-extrabold text-brand-cream shadow-lg shadow-brand-red/25 transition hover:brightness-110"
           >
             <ShoppingBag className="h-4 w-4" aria-hidden />
             {t.order}

@@ -24,6 +24,7 @@ Owner: Mohab. Client: **Panzutti**, a panuozzo (wood-fired Neapolitan sandwich-p
 | Table reservations `/reserve` (date, 30-min slot, guests, pre-ordered food → checkout as type "reservation"; `lib/reservation.ts`, `components/reservation-picker.tsx`) + 14% VAT on every order and 12% service on reservations (`estimateTotals()` in `lib/cart.tsx`) | ✅ Built — **needs `database/panzutti_supabase_v4.sql` run** (until then reservations fail and totals have no VAT) |
 | Images self-hosted: menu photos `public/menu/<slug>.webp` (`localMenuImage()` in `lib/data.ts`), mascot poses `public/mascots/*.webp` (`MASCOTS` in `lib/brand.ts`, `<Mascot pose>`), /pizza photos `public/pizza`. Logo is a text wordmark (old logo PNGs are gone from panzutti.com) | ✅ |
 | Scroll animations: `[data-reveal]` + `components/scroll-reveal.tsx` (mounted in the locale layout) | ✅ |
+| Loyalty points per phone (`database/panzutti_supabase_v5.sql`; checkout card in `checkout-form.tsx` via `get_loyalty`; admin page `/loyalty` in Panzutti-Admin; customer balance page `/[locale]/points` with the animated mascot, `components/points-check.tsx`, linked in header + footer) | ✅ Built, v5 live |
 | Realtime instead of polling, scheduled delivery/pickup orders | ⏳ Next |
 | Google sign-in, account, saved addresses | ⏳ Next |
 | Panzutti Family wall `/family` + share page `/family/share` (anyone can upload with a name; optional Google sign-in adds "your photos"; every photo needs admin approval) | ✅ Built — guest upload needs the v3 (2) SQL run (see section 8) |
@@ -58,7 +59,9 @@ npm run build        # must pass (type check + lint) before you finish any task
 NEXT_PUBLIC_SUPABASE_URL=https://dpwsssmwarxntplorgtl.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...   (see .env.local)
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=...       (optional; browser key restricted by HTTP referrer, Maps JavaScript API + Geocoding API)
 ```
+Checkout delivery map: `components/location-picker.tsx`. With the key, a draggable Google map under a fixed pin (each pin reverse-geocodes into the address field: Google Geocoder, falling back to OpenStreetMap Nominatim). Without it, "Use my location" (GPS) and a keyless Google Maps embed preview. Orders have no lat/lng columns, so the pin is appended to `p_delivery_notes` as a `📍 https://www.google.com/maps?q=lat,lng` line. The pin is saved with the guest's details in `panzutti-customer-v1`.
 Never put the service-role key, Gmail password or any secret in the frontend or in this repo.
 
 ---
@@ -161,7 +164,7 @@ D:\work\Panzutti
 Fonts: **Fraunces** (headings), **DM Sans** (body), **Yellowtail** (`font-script` accent lines like "Favorite Bite."), **Lalezar** (`font-arabic`, Arabic headings). Utilities: `grain`, `animate-marquee`, `animate-float`, `animate-fade-up`.
 
 ### Design language
-**Mascot = the curly-haired Panzutti character** (`public/brand/character.webp`, a transparent cut-out of `character-welcome.jpg`; the old pizza mascot from panzutti.com is no longer used). He appears in the home hero, beside the bestsellers, standing on the footer of every page, in the menu/careers/family/suppliers/track headers, the welcome pop-up and empty/404 states. Rounded-3xl cards, pill buttons, a red rotated sticker on photos, polaroid frames, the floating mascot, a red marquee strip, a dark-green story section with the "على إيدك" badge, a yellow Family section and a dark-green footer. Keep new pages consistent with the home page.
+**Mascot = the curly-haired Panzutti character** (`public/brand/character.webp`, a transparent cut-out of `character-welcome.jpg`; the old pizza mascot from panzutti.com is no longer used). He appears in the home hero, beside the bestsellers, in the "Build it with us" section (not in the footer any more), in the menu/careers/family/suppliers/track headers, the welcome pop-up and empty/404 states. Rounded-3xl cards, pill buttons, a red rotated sticker on photos, polaroid frames, the floating mascot, a red marquee strip, a dark-green story section with the "على إيدك" badge, a yellow Family section and a dark-green footer. Keep new pages consistent with the home page.
 
 ### Restaurant facts
 - Branch: Meraki Complex, Air Force House, El Golf, Salah Salem, Cairo.

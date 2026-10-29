@@ -681,3 +681,17 @@ Anyone can now share a photo **without an account**. Every photo still waits for
 - `find_orders_by_phone`: last 7 days + upcoming reservations, max 20 — the /track page now works with the phone only.
 - `report_tax_summary(p_from, p_to, p_branch_id?)` (staff/admin): VAT collected, service charge, revenue before VAT, reservations booked/completed and guests — used by the admin Reports page.
 - The `send-emails` Edge Function prints Service/VAT lines and the number of guests (redeploy it after the SQL).
+
+---
+
+## 13. v5 additions (2026-10-29) — `panzutti_supabase_v5.sql`: loyalty points
+
+Run after v4. A customer is their phone number (`normalize_phone()` format). No SMS check: the owner decided anyone who enters the phone number can see and spend its points.
+
+- **Settings** (`app_settings`, admin-editable): `loyalty_enabled` (default off), `loyalty_points_per_order` (fixed points per completed order), `loyalty_redeem_points` + `loyalty_redeem_value` (that many points = that many piasters off).
+- **Tables:** `loyalty_accounts(phone PK, customer_name, points ≥ 0, lifetime_points)` and `loyalty_transactions(phone, order_id, delta, reason earn|redeem|refund|reverse|adjust, note, created_by)`. RLS: staff read, nobody writes directly.
+- **Orders:** `points_redeemed`, `points_discount` (piasters, also added to `discount_total`, so VAT applies to the discounted price), `points_earned`.
+- **Earning:** trigger `orders_loyalty` (BEFORE UPDATE OF status). Completed adds the points once; cancelled refunds spent points and takes back earned ones.
+- **Spending:** `place_order(..., p_redeem_points integer DEFAULT 0)`. Whole blocks of `loyalty_redeem_points`, capped at what is left after the promo; deducted at placement with a conditional UPDATE (no double spend). The result also has `points_redeemed` and `points_discount`.
+- **RPCs:** `get_loyalty(p_phone)` → `{enabled, points, points_per_order, redeem_points, redeem_value}` (anon); `admin_adjust_points(p_phone, p_delta, p_note?)` (admin).
+- **Note:** `report_promo_usage` and anything else that sums `discount_total` now includes points discounts; use `points_discount` to separate them.

@@ -9,27 +9,30 @@ import type { Dictionary, Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import "./pizza-assembly.css";
 
-const LAST = 4; // 0 dough · 1 sauce · 2 cheese · 3 toppings · 4 ready
-const STEP_MS = 2200; // time on each layer
-const DONE_MS = 4000; // time the finished pizza stays before it starts again
+const LAST = 5; // 0 dough · 1 bake · 2 slice open · 3 cheese · 4 fillings · 5 ready
+const STEP_MS = 2200; // time on each step
+const DONE_MS = 4000; // time the finished panuozzo stays before it starts again
 
-// Topping positions in % of the pizza box (centre = 50/50). All sit inside the cheese circle.
-const TOPPINGS: { kind: "pepperoni" | "mushroom" | "basil"; x: number; y: number; r: number }[] = [
-  { kind: "pepperoni", x: 50, y: 24, r: 0 },
-  { kind: "pepperoni", x: 28, y: 42, r: 0 },
-  { kind: "pepperoni", x: 70, y: 40, r: 0 },
-  { kind: "pepperoni", x: 40, y: 66, r: 0 },
-  { kind: "pepperoni", x: 66, y: 70, r: 0 },
-  { kind: "pepperoni", x: 50, y: 47, r: 0 },
-  { kind: "mushroom", x: 36, y: 30, r: -20 },
-  { kind: "mushroom", x: 74, y: 57, r: 25 },
-  { kind: "mushroom", x: 26, y: 60, r: 10 },
-  { kind: "mushroom", x: 56, y: 82, r: -35 },
-  { kind: "basil", x: 62, y: 28, r: 35 },
-  { kind: "basil", x: 38, y: 50, r: -40 },
-  { kind: "basil", x: 60, y: 58, r: 120 },
-  { kind: "basil", x: 44, y: 80, r: 70 },
+// Filling positions in % of the panuozzo box (centre = 50/50). All sit inside the sliced-open crumb.
+const FILLINGS: { kind: "salami" | "tomato" | "rocket"; x: number; y: number; r: number }[] = [
+  { kind: "salami", x: 20, y: 50, r: 0 },
+  { kind: "salami", x: 34, y: 46, r: 0 },
+  { kind: "salami", x: 48, y: 53, r: 0 },
+  { kind: "salami", x: 62, y: 47, r: 0 },
+  { kind: "salami", x: 76, y: 52, r: 0 },
+  { kind: "tomato", x: 27, y: 40, r: 20 },
+  { kind: "tomato", x: 55, y: 60, r: -15 },
+  { kind: "tomato", x: 70, y: 39, r: 40 },
+  { kind: "tomato", x: 41, y: 61, r: -30 },
+  { kind: "rocket", x: 24, y: 60, r: -25 },
+  { kind: "rocket", x: 42, y: 38, r: 15 },
+  { kind: "rocket", x: 58, y: 40, r: -10 },
+  { kind: "rocket", x: 80, y: 41, r: 30 },
+  { kind: "rocket", x: 68, y: 61, r: -40 },
 ];
+
+// Melted cheese dripping from under the closed lid (% from the start edge).
+const DRIPS = [{ x: 30, h: 9 }, { x: 47, h: 13 }, { x: 63, h: 8 }, { x: 74, h: 11 }];
 
 export function PizzaAssembly({ locale, t }: { locale: Locale; t: Dictionary["pizza"] }) {
   const [stage, setStage] = useState(0);
@@ -41,7 +44,7 @@ export function PizzaAssembly({ locale, t }: { locale: Locale; t: Dictionary["pi
   const step = t.steps[stage];
   const Arrow = locale === "ar" ? ArrowLeft : ArrowRight;
 
-  // Builds itself layer by layer, only while the section is on screen, and loops after showing the finished pizza.
+  // Builds itself step by step, only while the section is on screen, and loops after showing the finished panuozzo.
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -105,35 +108,82 @@ export function PizzaAssembly({ locale, t }: { locale: Locale; t: Dictionary["pi
         </div>
 
         <div className="pz-stage">
-          {/* the character points at the pizza while it builds itself */}
-          <Mascot pose="guide" point="end" className="pz-mascot" />
+          {/* the character points at the panuozzo while it builds itself */}
+          <Mascot point="end" className="pz-mascot" />
           <div className="pz-board" aria-hidden />
           <motion.div
-            className="pizza"
+            className="pnz"
             role="img"
             aria-label={step.t}
-            animate={done && !reduce ? { scale: [1, 1.08, 0.97, 1.02, 1], rotate: [0, -4, 3, -1, 0] } : { scale: 1, rotate: 0 }}
+            animate={done && !reduce ? { scale: [1, 1.08, 0.97, 1.02, 1], rotate: [0, -3, 2, -1, 0] } : { scale: 1, rotate: 0 }}
             transition={{ duration: 0.9, ease: "easeInOut" }}
           >
-            <div className="pizza-dough" />
+            <div className="pnz-dough" />
 
             <AnimatePresence>
-              {stage >= 1 && <motion.div key="sauce" className="pizza-sauce" {...layer} />}
-              {stage >= 2 && <motion.div key="cheese" className="pizza-cheese" {...layer} />}
+              {stage >= 1 && (
+                <motion.div
+                  key="crust"
+                  className="pnz-crust"
+                  initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.92 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: reduce ? 0 : 1, ease: "easeOut" }}
+                />
+              )}
+              {stage >= 2 && (
+                <motion.div
+                  key="cut"
+                  className="pnz-cut"
+                  style={{ originX: locale === "ar" ? 1 : 0 }}
+                  initial={reduce ? { opacity: 0 } : { scaleX: 0, opacity: 0 }}
+                  animate={{ scaleX: 1, opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: reduce ? 0 : 0.8, ease: "easeInOut" }}
+                />
+              )}
+              {stage >= 3 && <motion.div key="cheese" className="pnz-cheese" {...layer} />}
             </AnimatePresence>
 
             <AnimatePresence>
-              {stage >= 3 &&
-                TOPPINGS.map((tp, index) => (
-                  <div key={`${tp.kind}-${index}`} className="pz-spot" style={{ left: `${tp.x}%`, top: `${tp.y}%` }}>
+              {stage >= 4 &&
+                FILLINGS.map((f, index) => (
+                  <div key={`${f.kind}-${index}`} className="pz-spot" style={{ left: `${f.x}%`, top: `${f.y}%` }}>
                     <motion.div
-                      className={tp.kind}
-                      initial={reduce ? { opacity: 0, rotate: tp.r } : { y: -150, opacity: 0, scale: 0.5, rotate: tp.r - 60 }}
-                      animate={{ y: 0, opacity: 1, scale: 1, rotate: tp.r }}
+                      className={`pnz-${f.kind}`}
+                      initial={reduce ? { opacity: 0, rotate: f.r } : { y: -150, opacity: 0, scale: 0.5, rotate: f.r - 60 }}
+                      animate={{ y: 0, opacity: 1, scale: 1, rotate: f.r }}
                       exit={{ opacity: 0, scale: reduce ? 1 : 0.5, transition: { duration: reduce ? 0 : 0.25 } }}
                       transition={reduce ? { duration: 0 } : { delay: index * 0.08, type: "spring", stiffness: 220, damping: 13 }}
                     />
                   </div>
+                ))}
+            </AnimatePresence>
+
+            {/* the top half of the bread folds over the fillings and closes it like a sandwich */}
+            <AnimatePresence>
+              {done && (
+                <motion.div
+                  key="lid"
+                  className="pnz-lid"
+                  style={{ originY: 0, transformPerspective: 600 }}
+                  initial={reduce ? { opacity: 0 } : { rotateX: -170, opacity: 0 }}
+                  animate={{ rotateX: 0, opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={reduce ? { duration: 0 } : { duration: 0.9, ease: [0.3, 1.25, 0.5, 1], opacity: { duration: 0.2 } }}
+                />
+              )}
+              {done &&
+                DRIPS.map((d, index) => (
+                  <motion.span
+                    key={`drip-${d.x}`}
+                    className="pnz-drip"
+                    style={{ insetInlineStart: `${d.x}%`, height: `${d.h}%`, originY: 0 }}
+                    initial={reduce ? { opacity: 0 } : { scaleY: 0, opacity: 0 }}
+                    animate={{ scaleY: 1, opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: reduce ? 0 : 0.6, delay: reduce ? 0 : 0.8 + index * 0.12, ease: "easeIn" }}
+                  />
                 ))}
             </AnimatePresence>
           </motion.div>

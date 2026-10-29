@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Banknote, Clock, Loader2, Smartphone, Tag, X } from "lucide-react";
+import { Banknote, Clock, Loader2, Smartphone, Star, Tag, X } from "lucide-react";
 import { OrderTypeToggle, TotalsRows, useCartSummary } from "./cart-view";
 import { ReservationPicker } from "./reservation-picker";
+import { LocationPicker, mapsLink, type LatLng } from "./location-picker";
 import type { Branch } from "@/lib/data";
 import { openStatus } from "@/lib/data";
 import type { Catalog } from "@/lib/catalog";
@@ -22,6 +23,18 @@ type Customer = { name: string; phone: string; email: string; address: string; a
 type Field = keyof Customer;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** get_loyalty() (v5 SQL). Points belong to the phone number; redeem_value is piasters per redeem_points. */
+type Loyalty = { enabled: boolean; points: number; points_per_order: number; redeem_points: number; redeem_value: number };
+
+/** Same rule as place_order: whole blocks of redeem_points, never more than what is left to pay. */
+function pointsToUse(l: Loyalty | null, left: number) {
+  if (!l?.enabled || l.redeem_points <= 0) return { points: 0, value: 0 };
+  let blocks = Math.floor(l.points / l.redeem_points);
+  if (l.redeem_value > 0) blocks = Math.min(blocks, Math.ceil(left / l.redeem_value));
+  const value = Math.min(blocks * l.redeem_value, left);
+  return blocks > 0 && value > 0 ? { points: blocks * l.redeem_points, value } : { points: 0, value: 0 };
+}
 
 function Input({
   label,
@@ -63,12 +76,15 @@ export function CheckoutForm({
   const router = useRouter();
   const s = useCartSummary(catalog, branch);
   const [c, setC] = useState<Customer>({ name: "", phone: "", email: "", address: "", addressNotes: "" });
+  const [location, setLocation] = useState<LatLng | null>(null);
   const [note, setNote] = useState("");
   const [errors, setErrors] = useState<Partial<Record<Field | "table", string>>>({});
   const [promoInput, setPromoInput] = useState("");
   const [promo, setPromo] = useState<{ code: string; discount: number } | null>(null);
   const [promoBusy, setPromoBusy] = useState(false);
   const [promoError, setPromoError] = useState("");
+  const [loyalty, setLoyalty] = useState<Loyalty | null>(null);
+  const [usePoints, setUsePoints] = useState(false);
   const [method, setMethod] = useState<"cash" | "instapay">("cash");
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState("");
@@ -80,8 +96,12 @@ export function CheckoutForm({
 
   useEffect(() => {
     try {
-      const saved = JSON.parse(window.localStorage.getItem(CUSTOMER_KEY) ?? "null") as Partial<Customer> | null;
-      if (saved) setC((cur) => ({ ...cur, ...saved }));
+      const saved = JSON.parse(window.localStorage.getItem(CUSTOMER_KEY) ?? "null") as (Partial<Customer> & { location?: LatLng | null }) | null;
+      if (saved) {
+        const { location: savedLocation, ...rest } = saved;
+        setC((cur) => ({ ...cur, ...rest }));
+        if (savedLocation) setLocation(savedLocation);
+      }
     } catch {
       // nothing saved / storage blocked
     }
@@ -98,6 +118,25 @@ export function CheckoutForm({
     setPromo(null);
     setPromoError("");
   }, [s.type, s.subtotal]);
+
+  // Points balance for the typed phone (silently hidden until the v5 SQL is run or when switched off)
+  useEffect(() => {
+    const phone = normalizePhone(c.phone);
+    if (!phone || !supabase) {
+      setLoyalty(null);
+      return;
+    }
+    const db = supabase;
+    let stale = false;
+    const id = window.setTimeout(async () => {
+      const { data, error } = await db.rpc("get_loyalty", { p_phone: phone });
+      if (!stale) setLoyalty(error ? null : (data as Loyalty));
+    }, 400);
+    return () => {
+      stale = true;
+      window.clearTimeout(id);
+    };
+  }, [c.phone]);
 
   const set = (f: Field) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setC((cur) => ({ ...cur, [f]: e.target.value }));
@@ -150,11 +189,15 @@ export function CheckoutForm({
       p_customer_email: c.email.trim() || null,
       p_items: toOrderItems(s.lines),
       p_delivery_address: s.type === "delivery" ? c.address.trim() : null,
-      p_delivery_notes: s.type === "delivery" ? c.addressNotes.trim() || null : null,
+      // orders have no lat/lng columns: the pin travels as a Google Maps link in the driver notes
+      p_delivery_notes:
+        s.type === "delivery" ? [c.addressNotes.trim(), location && `📍 ${mapsLink(location)}`].filter(Boolean).join("\n") || null : null,
       p_note: note.trim() || null,
       p_promo_code: promo?.code ?? null,
       p_locale: locale,
       p_payment_method: method,
+      // only sent when used, so orders keep working before the v5 SQL is applied
+      ...(redeem.points > 0 ? { p_redeem_points: redeem.points } : {}),
       // only sent for reservations, so normal orders keep working before the v4 SQL is applied
       ...(isReservation && s.reservation
         ? {
@@ -170,7 +213,7 @@ export function CheckoutForm({
       return;
     }
     try {
-      window.localStorage.setItem(CUSTOMER_KEY, JSON.stringify(c));
+      window.localStorage.setItem(CUSTOMER_KEY, JSON.stringify({ ...c, location }));
     } catch {
       // not critical
     }
@@ -183,7 +226,10 @@ export function CheckoutForm({
 
   if (!s.ready || !s.lines.length) return <div className="h-64 animate-pulse rounded-3xl bg-muted" aria-busy />;
 
-  const discount = promo?.discount ?? 0;
+  const promoDiscount = promo?.discount ?? 0;
+  const available = pointsToUse(loyalty, Math.max(s.subtotal - promoDiscount, 0));
+  const redeem = usePoints ? available : { points: 0, value: 0 };
+  const discount = promoDiscount + redeem.value;
   const totals = s.totals(discount);
   const total = totals.total;
   // A reservation is for later, so it can be booked while the branch is closed right now
@@ -240,6 +286,16 @@ export function CheckoutForm({
           {s.type === "delivery" && (
             <>
               <Input id="f-address" label={t.address} value={c.address} onChange={set("address")} autoComplete="street-address" placeholder={t.addressPlaceholder} error={errors.address} maxLength={300} />
+              <LocationPicker
+                locale={locale}
+                t={t}
+                value={location}
+                onChange={setLocation}
+                onAddress={(a) => {
+                  setC((cur) => ({ ...cur, address: a.slice(0, 300) }));
+                  setErrors((er) => ({ ...er, address: undefined }));
+                }}
+              />
               <Input id="f-addressNotes" label={t.addressNotes} value={c.addressNotes} onChange={set("addressNotes")} maxLength={300} />
             </>
           )}
@@ -343,15 +399,48 @@ export function CheckoutForm({
           {promoError && <p className="mt-2 text-sm font-bold text-brand-red">{promoError}</p>}
         </div>
 
+        {/* loyalty points, tied to the phone number */}
+        {loyalty?.enabled && (
+          <div className="mt-4 rounded-2xl bg-brand-yellow/25 px-4 py-3 text-sm ring-1 ring-brand-yellow/60">
+            <p className="flex items-center justify-between gap-2 font-bold">
+              <span className="inline-flex items-center gap-2 text-primary">
+                <Star className="h-4 w-4 fill-brand-yellow text-primary" aria-hidden /> {t.pointsTitle}
+              </span>
+              <span className="tabular-nums">{t.pointsBalance.replace("{points}", String(loyalty.points))}</span>
+            </p>
+            {available.points > 0 ? (
+              <label className="mt-2 flex cursor-pointer items-center gap-2 font-bold">
+                <input type="checkbox" checked={usePoints} onChange={(e) => setUsePoints(e.target.checked)} className="h-4 w-4 accent-primary" />
+                {t.pointsUse.replace("{points}", String(available.points)).replace("{amount}", egp(available.value, locale))}
+              </label>
+            ) : (
+              loyalty.redeem_value > 0 && (
+                <p className="mt-1 text-muted-foreground">
+                  {t.pointsNeed.replace("{points}", String(loyalty.redeem_points)).replace("{amount}", egp(loyalty.redeem_value, locale))}
+                </p>
+              )
+            )}
+            {loyalty.points_per_order > 0 && (
+              <p className="mt-1 text-xs text-muted-foreground">{t.pointsEarn.replace("{points}", String(loyalty.points_per_order))}</p>
+            )}
+          </div>
+        )}
+
         <dl className="mt-5 space-y-2 text-sm">
           <div className="flex justify-between">
             <dt className="text-muted-foreground">{tCart.subtotal}</dt>
             <dd className="font-bold tabular-nums">{egp(s.subtotal, locale)}</dd>
           </div>
-          {discount > 0 && (
+          {promoDiscount > 0 && (
             <div className="flex justify-between text-primary">
               <dt>{t.discount}</dt>
-              <dd className="font-bold tabular-nums">−{egp(discount, locale)}</dd>
+              <dd className="font-bold tabular-nums">−{egp(promoDiscount, locale)}</dd>
+            </div>
+          )}
+          {redeem.value > 0 && (
+            <div className="flex justify-between text-primary">
+              <dt>{t.pointsDiscount.replace("{points}", String(redeem.points))}</dt>
+              <dd className="font-bold tabular-nums">−{egp(redeem.value, locale)}</dd>
             </div>
           )}
           <TotalsRows totals={totals} type={s.type} locale={locale} t={tCart} />

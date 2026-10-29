@@ -99,8 +99,8 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             </div>
 
             <div className="relative animate-fade-up [animation-delay:120ms]">
-              <div className="relative aspect-[5/4] overflow-hidden rounded-[2.5rem] bg-white shadow-2xl shadow-primary/20 ring-8 ring-card">
-                <Image src={brand.photos.hero} alt="Hot Honey Pepperoni panuozzo" fill priority sizes="(min-width: 768px) 560px, 100vw" className="object-cover transition duration-700 hover:scale-105" />
+              <div className="relative aspect-square overflow-hidden rounded-[2.5rem] bg-white shadow-2xl shadow-primary/20 ring-8 ring-card">
+                <Image src={brand.photos.hero} alt="A Panzutti shrimp panuozzo with lettuce and sauce" fill priority sizes="(min-width: 768px) 560px, 100vw" className="object-cover transition duration-700 hover:scale-105" />
               </div>
               <div className="absolute -top-4 end-3 flex h-24 w-24 rotate-12 animate-[float_5s_ease-in-out_infinite] items-center justify-center rounded-full bg-brand-red text-center text-brand-cream shadow-xl md:h-28 md:w-28">
                 <span className={`whitespace-pre-line leading-tight ${locale === "ar" ? "font-arabic text-lg" : "font-script text-xl"}`}>{t.hero.sticker}</span>

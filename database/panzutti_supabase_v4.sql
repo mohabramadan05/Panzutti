@@ -1,6 +1,8 @@
 -- =====================================================================
 -- Panzutti — v4: VAT, service charge and table reservations (2026-10-24)
 -- Run after panzutti_supabase.sql, _v2.sql and _v3.sql.
+-- Do NOT re-run after v5: it would add back the old place_order next to v5's
+-- (fix: run the DROP for this 18-argument place_order shown in v5 section 3).
 --
 -- 1. Taxes
 --    branches.tax_rate (default 0.14 = 14% VAT) and branches.service_rate
@@ -453,7 +455,7 @@ RETURNS TABLE(vat_total bigint, service_total bigint, net_before_tax bigint,
               reservations_placed bigint, reservations_completed bigint, reservation_guests bigint)
 LANGUAGE plpgsql STABLE SECURITY DEFINER
 SET search_path = public, pg_temp
-AS $
+AS $$
 DECLARE v_scope uuid := public.report_scope(p_branch_id, p_from, p_to);
 BEGIN
   RETURN QUERY
@@ -468,7 +470,7 @@ BEGIN
   WHERE (v_scope IS NULL OR o.branch_id = v_scope)
     AND public.business_date(o.created_at, b.timezone) BETWEEN p_from AND p_to;
 END;
-$;
+$$;
 REVOKE ALL ON FUNCTION public.report_tax_summary(date, date, uuid) FROM public, anon;
 GRANT EXECUTE ON FUNCTION public.report_tax_summary(date, date, uuid) TO authenticated;
 

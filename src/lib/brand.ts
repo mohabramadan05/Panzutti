@@ -43,7 +43,8 @@ export const FACES_RIGHT: ReadonlySet<MascotPose> = new Set<MascotPose>(["presen
 export const brand = {
   mascot: MASCOTS.classic.src,
   photos: {
-    hero: "/menu/hot-honey-pepperoni.webp", // signature panuozzo
+    hero: "/brand/hero-shrimp.webp", // shrimp panuozzo on a plate, wooden table
+    signature: "/menu/hot-honey-pepperoni.webp", // Hot Honey Pepperoni, used in the menu page header
     story: "/menu/the-comfort.webp", // polaroid in the story section
   },
   socials: {
