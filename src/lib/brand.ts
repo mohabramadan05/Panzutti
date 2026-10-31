@@ -44,7 +44,7 @@ export const brand = {
   mascot: MASCOTS.classic.src,
   photos: {
     hero: "/brand/hero-shrimp.webp", // shrimp panuozzo on a plate, wooden table
-    signature: "/menu/hot-honey-pepperoni.webp", // Hot Honey Pepperoni, used in the menu page header
+    signature: "/menu/philly-sausage.webp", // Philly Sausage, used in the menu page header
     story: "/menu/the-comfort.webp", // polaroid in the story section
   },
   socials: {

@@ -46,6 +46,11 @@ const FILLINGS: { kind: "tomato" | "basil"; x: number; y: number; r: number; fli
 ];
 const FILLING_SRC = { tomato: "/pizza/build/tomato-a.webp", basil: "/pizza/build/basil-a.webp" };
 
+// Flour dust that puffs off the dough as it lands (angle in degrees around the disc, distance in % of the stage width)
+const FLOUR = Array.from({ length: 10 }, (_, i) => ({ a: i * 36 + (i % 2 ? 14 : 0), d: 34 + (i % 3) * 6, s: 10 + (i % 4) * 5 }));
+// Embers rising from the wood-fired oven (left in %, delay and duration in s, size in px)
+const EMBERS = Array.from({ length: 18 }, (_, i) => ({ x: 8 + ((i * 37) % 84), delay: (i * 0.19) % 1.6, dur: 1.5 + (i % 4) * 0.35, s: 7 + (i % 3) * 3 }));
+
 /** The `crop` region of a photo filling its round (overflow-hidden) parent. */
 function Photo({ crop }: { crop: PhotoCrop }) {
   const k = 1 / crop.d; // photo width in parent widths
@@ -63,6 +68,7 @@ function Photo({ crop }: { crop: PhotoCrop }) {
 
 export function PizzaAssembly({ locale, t }: { locale: Locale; t: Dictionary["pizza"] }) {
   const [stage, setStage] = useState(0);
+  const [round, setRound] = useState(0); // bumps on every loop, so the dough drops in again
   const [playing, setPlaying] = useState(true);
   const [visible, setVisible] = useState(false);
   const ref = useRef<HTMLElement>(null);
@@ -83,7 +89,10 @@ export function PizzaAssembly({ locale, t }: { locale: Locale; t: Dictionary["pi
 
   useEffect(() => {
     if (!playing || !visible) return;
-    const id = window.setTimeout(() => setStage((s) => (s >= LAST ? 0 : s + 1)), stage === LAST ? DONE_MS : STEP_MS);
+    const id = window.setTimeout(() => {
+      if (stage >= LAST) setRound((r) => r + 1);
+      setStage(stage >= LAST ? 0 : stage + 1);
+    }, stage === LAST ? DONE_MS : STEP_MS);
     return () => window.clearTimeout(id);
   }, [stage, playing, visible]);
 
@@ -113,9 +122,18 @@ export function PizzaAssembly({ locale, t }: { locale: Locale; t: Dictionary["pi
             </AnimatePresence>
           </div>
 
-          <ol className="pz-dots" aria-hidden>
+          {/* steps: click one to jump to it */}
+          <ol className="pz-dots">
             {t.steps.map((s, i) => (
-              <li key={s.t} className={cn("pz-dot", i <= stage && "is-on", i === stage && "is-current")} />
+              <li key={s.t}>
+                <button
+                  type="button"
+                  onClick={() => setStage(i)}
+                  aria-label={`${t.step.replace("{n}", String(i + 1)).replace("{total}", String(LAST + 1))}: ${s.t}`}
+                  aria-current={i === stage ? "step" : undefined}
+                  className={cn("pz-dot", i <= stage && "is-on", i === stage && "is-current")}
+                />
+              </li>
             ))}
           </ol>
 
@@ -135,16 +153,61 @@ export function PizzaAssembly({ locale, t }: { locale: Locale; t: Dictionary["pi
           <Mascot point="end" className="pz-mascot" />
           <div className={cn("pz-plate", baking && "is-baking")} aria-hidden />
 
+          {/* progress around the plate: fills up while the current step plays */}
+          <svg className="pz-ring" viewBox="0 0 100 100" aria-hidden>
+            <circle cx="50" cy="50" r="48" className="pz-ring-track" />
+            {playing && visible && !reduce && (
+              <motion.circle
+                key={stage}
+                cx="50"
+                cy="50"
+                r="48"
+                className="pz-ring-fill"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: (done ? DONE_MS : STEP_MS) / 1000, ease: "linear" }}
+              />
+            )}
+          </svg>
+
+          {/* flour dust puffing off the dough as it lands */}
+          <AnimatePresence>
+            {stage === 0 &&
+              !reduce &&
+              FLOUR.map((f, i) => (
+                <motion.span
+                  key={`flour-${i}`}
+                  className="pz-flour"
+                  style={{ width: f.s, height: f.s }}
+                  initial={{ opacity: 0, x: "-50%", y: "-50%", scale: 0.3 }}
+                  animate={{
+                    opacity: [0, 0.9, 0],
+                    scale: [0.3, 1.4, 2],
+                    x: `calc(-50% + ${(Math.cos((f.a * Math.PI) / 180) * f.d).toFixed(1)}cqw)`,
+                    y: `calc(-50% + ${(Math.sin((f.a * Math.PI) / 180) * f.d).toFixed(1)}cqw)`,
+                  }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 1.4, delay: 0.25 + (i % 3) * 0.05, ease: "easeOut" }}
+                />
+              ))}
+          </AnimatePresence>
+
           {/* the round base: real photos stacked, each one laid over the last */}
           <motion.div
+            key={round}
             className="pz-disc"
             style={{ transformPerspective: 800 }}
             animate={
               done
-                ? { opacity: 0, scale: reduce ? 1 : 0.6, rotateX: reduce ? 0 : 70 }
-                : { opacity: 1, scale: 1, rotateX: 0, filter: baking ? "saturate(1.35) brightness(1.02) sepia(0.3) contrast(1.06)" : "saturate(1) brightness(1) sepia(0) contrast(1)" }
+                ? { opacity: 0, scale: reduce ? 1 : 0.6, rotateX: reduce ? 0 : 70, y: 0 }
+                : { opacity: 1, scale: 1, rotateX: 0, rotate: reduce ? 0 : stage * 14, y: 0, filter: baking ? "saturate(1.35) brightness(1.02) sepia(0.3) contrast(1.06)" : "saturate(1) brightness(1) sepia(0) contrast(1)" }
             }
-            transition={fade(done ? 0.6 : 0.9)}
+            initial={reduce ? false : { y: -80, opacity: 0, scale: 0.9 }}
+            transition={
+              reduce
+                ? { duration: 0 }
+                : { duration: done ? 0.6 : 0.9, ease: "easeOut", rotate: { type: "spring", stiffness: 40, damping: 12 }, y: { type: "spring", stiffness: 260, damping: 16 } }
+            }
           >
             <Photo crop={PIZZA_PHOTOS.crust} />
 
@@ -153,8 +216,8 @@ export function PizzaAssembly({ locale, t }: { locale: Locale; t: Dictionary["pi
                 <motion.div
                   key="sauce"
                   className="pz-layer"
-                  initial={reduce ? { opacity: 0 } : { clipPath: "circle(0% at 50% 50%)" }}
-                  animate={reduce ? { opacity: 1 } : { clipPath: "circle(50% at 50% 50%)" }}
+                  initial={reduce ? { opacity: 0 } : { clipPath: "circle(0% at 50% 50%)", rotate: -200 }}
+                  animate={reduce ? { opacity: 1 } : { clipPath: "circle(50% at 50% 50%)", rotate: 0 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: reduce ? 0 : 1.3, ease: "easeInOut" }}
                 >
@@ -209,6 +272,28 @@ export function PizzaAssembly({ locale, t }: { locale: Locale; t: Dictionary["pi
               {baking && <motion.div key="fire" className="pz-fire" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={fade(0.6)} />}
             </AnimatePresence>
           </motion.div>
+
+          {/* embers rising from the oven while it bakes */}
+          {baking && !reduce && (
+            <div className="pz-embers" aria-hidden>
+              {EMBERS.map((e, i) => (
+                <span
+                  key={i}
+                  className="pz-ember"
+                  style={{ left: `${e.x}%`, width: e.s, height: e.s, animationDelay: `${e.delay}s`, animationDuration: `${e.dur}s` }}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* steam over the finished panuozzo */}
+          {done && !reduce && (
+            <div className="pz-steam" aria-hidden>
+              <span />
+              <span />
+              <span />
+            </div>
+          )}
 
           {/* done: folded shut — the real thing, straight from the menu photo */}
           <AnimatePresence>

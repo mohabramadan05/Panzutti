@@ -106,8 +106,6 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
               <div className="absolute -top-4 end-3 flex h-24 w-24 rotate-12 animate-[float_5s_ease-in-out_infinite] items-center justify-center rounded-full bg-brand-red text-center text-brand-cream shadow-xl md:h-28 md:w-28">
                 <span className={`whitespace-pre-line leading-tight ${locale === "ar" ? "font-arabic text-lg" : "font-script text-xl"}`}>{t.hero.sticker}</span>
               </div>
-              {/* sticker head peeking from the bottom corner on phones */}
-              <Mascot pose="stickerCheeky" className="absolute -bottom-6 end-4 h-20 animate-wiggle drop-shadow-lg md:hidden" />
               {/* the character presents the panuozzo */}
               <Mascot pose="presenting" point="end" eager className="absolute -bottom-14 -start-24 hidden h-80 animate-float drop-shadow-xl md:block lg:h-96" />
             </div>
@@ -249,9 +247,6 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
 
         {/* ------------------------------------------------------------ PANZUTTI FAMILY */}
         <section className="relative overflow-hidden bg-brand-yellow">
-          {/* sticker heads floating around the wall */}
-          <Mascot pose="stickerHappy" className="pointer-events-none absolute -start-6 top-8 hidden h-24 -rotate-12 animate-float opacity-90 md:block" />
-          <Mascot pose="stickerExcited" className="pointer-events-none absolute bottom-6 end-[46%] hidden h-20 rotate-12 animate-wiggle md:block" />
           <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-16 md:grid-cols-[1fr_1.2fr] md:py-20">
             <div data-reveal="left" className="relative">
               <SectionTitle kicker={t.family.kicker} title={t.family.title} className="mb-4" />
@@ -366,7 +361,6 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
                 <span aria-hidden className="absolute start-6 top-5 -rotate-6 font-script text-6xl text-brand-cream md:text-7xl">Ciao!</span>
                 <Mascot pose="panuozzoGreeting" point="start" className="relative h-[88%] animate-float drop-shadow-2xl" />
               </div>
-              <Mascot pose="stickerSatisfied" className="absolute end-1 -top-8 h-24 xl:-end-3 rotate-12 animate-wiggle drop-shadow-lg md:h-28" />
             </div>
           </div>
         </section>
