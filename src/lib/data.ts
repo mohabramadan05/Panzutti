@@ -261,6 +261,34 @@ export async function getFamilyWall(): Promise<{ photos: FamilyPhoto[]; live: bo
   }
 }
 
+export type TeamPhoto = { id: string; url: string; name: string | null; role_en: string | null; role_ar: string | null };
+
+/** Visible team photos for /team (v7 SQL). The team-photos bucket is public, so plain public URLs. */
+export async function getTeamPhotos(): Promise<{ photos: TeamPhoto[]; live: boolean }> {
+  if (!supabase) return { photos: [], live: false };
+  const client = supabase;
+  try {
+    const { data, error } = await withTimeout(
+      client
+        .from("team_photos")
+        .select("id, file_path, name, role_en, role_ar")
+        .eq("is_active", true)
+        .order("sort_order")
+        .order("created_at", { ascending: false })
+        .limit(120),
+    );
+    if (error) throw error;
+    const rows = (data ?? []) as (Omit<TeamPhoto, "url"> & { file_path: string })[];
+    return {
+      photos: rows.map(({ file_path, ...r }) => ({ ...r, url: client.storage.from("team-photos").getPublicUrl(file_path).data.publicUrl })),
+      live: true,
+    };
+  } catch (e) {
+    console.warn("[team] Supabase unavailable:", (e as Error).message);
+    return { photos: [], live: false };
+  }
+}
+
 /** One item (with its category) for /menu/[slug]. `null` when the slug is not on the menu. */
 export async function getMenuItem(slug: string) {
   const data = await getMenuData();

@@ -51,6 +51,7 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
             <li><Link href={`/${locale}/track`} className="hover:underline">{t.nav.track}</Link></li>
             <li><Link href={`/${locale}/points`} className="hover:underline">{t.nav.points}</Link></li>
             <li><Link href={`/${locale}/family`} className="hover:underline">{t.nav.family}</Link></li>
+            <li><Link href={`/${locale}/team`} className="hover:underline">{t.nav.team}</Link></li>
             <li><Link href={`/${locale}/careers`} className="hover:underline">{t.join.team}</Link></li>
             <li><Link href={`/${locale}/suppliers`} className="hover:underline">{t.join.supplier}</Link></li>
           </ul>

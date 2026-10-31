@@ -12,6 +12,7 @@ import { ProductCard } from "@/components/product-card";
 import { PizzaAssembly } from "@/components/pizza-assembly";
 import { WelcomePopup } from "@/components/welcome-popup";
 import { Mascot, SectionTitle } from "@/components/brand";
+import { ChainMark, ChainPattern } from "@/components/brand-pattern";
 import { getHomeData, openStatus } from "@/lib/data";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { brand, type MascotPose } from "@/lib/brand";
@@ -118,7 +119,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
           <div className="flex w-max animate-marquee gap-8 whitespace-nowrap hover:[animation-play-state:paused]">
             {[...data.allItems, ...data.allItems].map((i, n) => (
               <span key={`${i.id}-${n}`} className="flex items-center gap-8 font-display text-2xl">
-                {name(i)} <Flame className="h-5 w-5 text-brand-yellow" />
+                {name(i)} <ChainMark className="h-9" />
               </span>
             ))}
           </div>
@@ -159,10 +160,10 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
           </span>
           <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-4 py-20 md:grid-cols-2 md:py-28">
             <div className="relative mx-auto w-full max-w-md md:max-w-none" data-reveal="left">
-              {/* the character carrying a giant panuozzo, on the brand yellow */}
-              <div className="relative flex aspect-[4/5] -rotate-2 items-end justify-center overflow-hidden rounded-[2rem] bg-brand-yellow shadow-2xl ring-8 ring-brand-cream">
-                <div aria-hidden className="absolute inset-0 grain opacity-60" />
-                <div aria-hidden className="absolute left-1/2 top-[18%] h-[70%] w-[70%] -translate-x-1/2 animate-spin-slow rounded-full border-[14px] border-dashed border-brand-red/25" />
+              {/* the character carrying a giant panuozzo, on the brand chain pattern */}
+              <div className="relative flex aspect-[4/5] -rotate-2 items-end justify-center overflow-hidden rounded-[2rem] bg-brand-red shadow-2xl ring-8 ring-brand-cream">
+                <ChainPattern size={150} className="opacity-35" />
+                <div aria-hidden className="absolute inset-0 grain opacity-40" />
                 <Mascot pose="panuozzoWalk" className="relative h-[92%] animate-float drop-shadow-xl" />
               </div>
               <figure className="absolute -bottom-8 -end-3 w-[44%] rotate-6 rounded-2xl bg-brand-cream p-2 pb-8 shadow-xl transition hover:rotate-2 md:-end-8">

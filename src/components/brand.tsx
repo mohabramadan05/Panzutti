@@ -6,17 +6,19 @@ import { cn } from "@/lib/utils";
  * Text wordmark (self-hosted fonts, no image request). The old logo PNGs on panzutti.com are gone;
  * to use a real logo file later, drop it in /public/brand and render an <img> here — nothing else changes.
  */
+/** Masks of the official logo (wordmark + "Panuozzo & more." line), so each part can take any brand colour. */
+const logoMask = (src: string): React.CSSProperties => ({
+  maskImage: `url(${src})`,
+  WebkitMaskImage: `url(${src})`,
+  maskSize: "100% 100%",
+  WebkitMaskSize: "100% 100%",
+});
+
 export function Logo({ variant = "red", className }: { variant?: "red" | "cream"; className?: string }) {
   return (
-    <span
-      role="img"
-      aria-label="Panzutti — Panuozzo & More"
-      className={cn("inline-flex h-10 flex-col items-center justify-center leading-none", variant === "red" ? "text-brand-red" : "text-brand-cream", className)}
-    >
-      <span aria-hidden className="font-script text-[2.1rem] leading-[0.95] md:text-[2.4rem]">Panzutti</span>
-      <span aria-hidden className={cn("mt-0.5 text-[0.55rem] font-extrabold uppercase tracking-[0.35em]", variant === "red" ? "text-primary" : "text-brand-yellow")}>
-        Panuozzo &amp; more
-      </span>
+    <span role="img" aria-label="Panzutti — Panuozzo & More" className={cn("relative inline-block h-10 aspect-[925/311]", className)}>
+      <span aria-hidden className={cn("absolute inset-0", variant === "red" ? "bg-brand-red" : "bg-brand-cream")} style={logoMask("/brand/logo-wordmark.png")} />
+      <span aria-hidden className={cn("absolute inset-0", variant === "red" ? "bg-primary" : "bg-brand-yellow")} style={logoMask("/brand/logo-tagline.png")} />
     </span>
   );
 }

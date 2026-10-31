@@ -9,9 +9,10 @@ import { useCart, type OrderType } from "@/lib/cart";
 import { cn } from "@/lib/utils";
 
 const DELAY_MS = 900;
+const SEEN_KEY = "panzutti-welcome-seen-v1";
 
 /**
- * Welcome on the home page, shown every time the home page is opened: the Panzutti character waves
+ * Welcome on the home page, shown once per browser (localStorage): the Panzutti character waves
  * next to a greeting and the ways to eat with us. Delivery/pickup set the cart's order type and open
  * the menu; "Reserve a table" opens /reserve.
  */
@@ -22,7 +23,17 @@ export function WelcomePopup({ locale, t }: { locale: Locale; t: Dictionary["wel
   const router = useRouter();
 
   useEffect(() => {
-    const id = window.setTimeout(() => setOpen(true), DELAY_MS);
+    try {
+      if (localStorage.getItem(SEEN_KEY)) return;
+    } catch {
+      // storage blocked (private mode): show it, it just can't be remembered
+    }
+    const id = window.setTimeout(() => {
+      setOpen(true);
+      try {
+        localStorage.setItem(SEEN_KEY, "1");
+      } catch {}
+    }, DELAY_MS);
     return () => window.clearTimeout(id);
   }, []);
 

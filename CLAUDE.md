@@ -22,9 +22,11 @@ Owner: Mohab. Client: **Panzutti**, a panuozzo (wood-fired Neapolitan sandwich-p
 | Full PDF menu in the DB (39 items + photos + Arabic) | ✅ Loaded |
 | Animated delivery scene on the order page (`components/delivery-scene.tsx` + `.css`: SVG shop → scooter → house, follows the live status; pickup shows a bag at the shop) | ✅ Built |
 | Table reservations `/reserve` (date, 30-min slot, guests, pre-ordered food → checkout as type "reservation"; `lib/reservation.ts`, `components/reservation-picker.tsx`) + 14% VAT on every order and 12% service on reservations (`estimateTotals()` in `lib/cart.tsx`) | ✅ Built — **needs `database/panzutti_supabase_v4.sql` run** (until then reservations fail and totals have no VAT) |
-| Images self-hosted: menu photos `public/menu/<slug>.webp` (`localMenuImage()` in `lib/data.ts`), mascot poses `public/mascots/*.webp` (`MASCOTS` in `lib/brand.ts`, `<Mascot pose>`), /pizza photos `public/pizza`. Logo is a text wordmark (old logo PNGs are gone from panzutti.com) | ✅ |
+| Images self-hosted: menu photos `public/menu/<slug>.webp` (`localMenuImage()` in `lib/data.ts`), mascot poses `public/mascots/*.webp` (`MASCOTS` in `lib/brand.ts`, `<Mascot pose>`), /pizza photos `public/pizza`. Logo = official wordmark as two alpha masks (`public/brand/logo-wordmark.png`, `logo-tagline.png`) coloured by CSS in `Logo`. Brand chain pattern (green-dot version, cropped from the pattern sheet): `public/brand/pattern-tile.png` / `pattern-link.png`, `components/brand-pattern.tsx` (`ChainPattern` behind the story mascot, `ChainMark` between marquee items) | ✅ |
 | Scroll animations: `[data-reveal]` + `components/scroll-reveal.tsx` (mounted in the locale layout) | ✅ |
 | Loyalty points per phone (`database/panzutti_supabase_v5.sql`; checkout card in `checkout-form.tsx` via `get_loyalty`; admin page `/loyalty` in Panzutti-Admin; customer balance page `/[locale]/points` with the animated mascot, `components/points-check.tsx`, linked in header + footer) | ✅ Built, v5 live |
+| Points by order amount (1 point per `loyalty_earn_amount` piasters of food after discounts) + team gallery `/[locale]/team` (admin uploads at `/team` in Panzutti-Admin, public bucket `team-photos`) — `database/panzutti_supabase_v7.sql` | ✅ Built — **needs v7 SQL run** |
+| Welcome pop-up shows once per browser (localStorage `panzutti-welcome-seen-v1`) | ✅ |
 | Realtime instead of polling, scheduled delivery/pickup orders | ⏳ Next |
 | Google sign-in, account, saved addresses | ⏳ Next |
 | Panzutti Family wall `/family` + share page `/family/share` (anyone can upload with a name; optional Google sign-in adds "your photos"; every photo needs admin approval) | ✅ Built — guest upload needs the v3 (2) SQL run (see section 8) |
@@ -88,7 +90,7 @@ D:\work\Panzutti
 │  │  ├─ site-footer.tsx
 │  │  ├─ product-card.tsx
 │  │  ├─ menu-browser.tsx        ← "use client": sticky tabs, scroll-spy, search for /menu
-│  │  ├─ pizza-assembly.tsx/.css ← "use client": step-by-step pizza build (motion/react, useReducedMotion)
+│  │  ├─ pizza-assembly.tsx/.css ← "use client": step-by-step panuozzo build from real photos: round crops of the /pizza series (dough → sauce → mozzarella, `PIZZA_PHOTOS`), tomato/basil/mozzarella cut-outs from public/pizza/build, oven glow, ends on the Capri menu photo, motion/react
 │  │  └─ pizza-scrollytelling.tsx ← "use client": GSAP + ScrollTrigger pin/scrub (useGSAP, gsap.matchMedia for reduced motion)
 │  ├─ lib/
 │  │  ├─ i18n.ts                 ← locales ["en","ar"], dirOf(), full EN/AR dictionaries
@@ -265,8 +267,8 @@ The server validates sold-out items, required groups (`min_select`/`max_select`)
 ---
 
 ## 8. Things the owner still has to do (not code)
+- **Run `database/panzutti_supabase_v7.sql`** (SQL Editor, whole file): points by amount + team gallery. Until then checkout shows no "you'll earn" line, completed orders still earn the old fixed points, and `/team` shows "couldn't load".
 - **Run `database/panzutti_supabase_v4.sql`** (Supabase → SQL Editor, whole file): VAT, service charge, reservations, phone-only tracking. Then redeploy the `send-emails` Edge Function (it now prints VAT/service lines). The admin panel already shows reservations (board filter "tables", dashboard list), VAT/service lines and a VAT report (`report_tax_summary`, also in v4).
-- Drop the real logo files into `public/brand/` and render them in `Logo` (`components/brand.tsx`) — the old panzutti.com logo/photo URLs return 404.
 - **Run the guest-upload SQL** (not applied yet — the migration tool was declined): Supabase → SQL Editor → paste the section `v3 (2)` of `database/panzutti_supabase_v3.sql` (from `CREATE OR REPLACE FUNCTION public.guest_family_upload_allowed()` to the end) → Run. Until then, guests on `/family/share` get an upload error; signed-in sharing is unaffected.
 - Supabase → Edge Functions → Secrets: add `GMAIL_USER` and `GMAIL_APP_PASSWORD` (a Gmail App Password). Optionally add `SITE_URL` and `EMAIL_REPLY_TO`.
 - Enable the Google provider in Supabase Auth. Redirect URI: `https://dpwsssmwarxntplorgtl.supabase.co/auth/v1/callback`. Also add the site under Auth → URL Configuration → Redirect URLs (`http://localhost:3000/**`, `https://panzutti.com/**`) or the family share sign-in will bounce. Until Google is on, `/family/share` shows "sign-in isn't switched on yet".

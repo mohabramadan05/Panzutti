@@ -24,8 +24,11 @@ type Field = keyof Customer;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/** get_loyalty() (v5 SQL). Points belong to the phone number; redeem_value is piasters per redeem_points. */
-type Loyalty = { enabled: boolean; points: number; points_per_order: number; redeem_points: number; redeem_value: number };
+/**
+ * get_loyalty() (v7 SQL). Points belong to the phone number; redeem_value is piasters per redeem_points.
+ * 1 point is earned for every earn_amount piasters of food after discounts.
+ */
+type Loyalty = { enabled: boolean; points: number; earn_amount?: number; redeem_points: number; redeem_value: number };
 
 /** Same rule as place_order: whole blocks of redeem_points, never more than what is left to pay. */
 function pointsToUse(l: Loyalty | null, left: number) {
@@ -231,6 +234,8 @@ export function CheckoutForm({
   const redeem = usePoints ? available : { points: 0, value: 0 };
   const discount = promoDiscount + redeem.value;
   const totals = s.totals(discount);
+  // same rule as the orders_loyalty trigger: food after discounts, rounded down
+  const earn = loyalty?.earn_amount ? Math.floor(Math.max(s.subtotal - discount, 0) / loyalty.earn_amount) : 0;
   const total = totals.total;
   // A reservation is for later, so it can be booked while the branch is closed right now
   const blocked = !catalog || s.hasUnavailable || s.belowMinimum || (!open && !isReservation);
@@ -420,9 +425,7 @@ export function CheckoutForm({
                 </p>
               )
             )}
-            {loyalty.points_per_order > 0 && (
-              <p className="mt-1 text-xs text-muted-foreground">{t.pointsEarn.replace("{points}", String(loyalty.points_per_order))}</p>
-            )}
+            {earn > 0 && <p className="mt-1 text-xs text-muted-foreground">{t.pointsEarn.replace("{points}", String(earn))}</p>}
           </div>
         )}
 

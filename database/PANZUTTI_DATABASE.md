@@ -704,3 +704,10 @@ Run after v4. A customer is their phone number (`normalize_phone()` format). No 
 - **Drivers:** `orders.driver_id`; RLS policy "Drivers view their delivery orders" (delivery orders of their branch that are `ready` and unassigned, or assigned to them). RPCs `driver_take_order(p_order_id)` (ready → out_for_delivery, assigns them) and `driver_complete_order(p_order_id)` (→ completed, cash marked paid; unpaid InstaPay refused). `is_driver_for(branch_id)` helper.
 - **Staff:** `assign_driver(p_order_id, p_driver_id | null)`.
 - **Users:** Edge Function `supabase/functions/admin-users` (admin-only; `create` a login with role + branch, `set_password`). Role/branch/active changes are plain `UPDATE profiles` (admins only, by RLS + `protect_profile_fields`).
+
+---
+
+## 15. v7 additions (2026-10-31) — `panzutti_supabase_v7.sql`: points by amount, team gallery
+
+- **Points by order amount:** new `app_settings.loyalty_earn_amount` (piasters per point, default 1000 = 1 point per 10 EGP). `orders_loyalty` now earns `floor((subtotal − discount_total) / loyalty_earn_amount)` on completion: food after promo and points discounts, without VAT, service or delivery. `loyalty_points_per_order` is no longer used. `get_loyalty` returns `earn_amount` instead of `points_per_order`.
+- **Team gallery:** table `team_photos(file_path, name?, role_en?, role_ar?, sort_order, is_active)`; RLS: everyone reads active rows, admins read all and write. Public bucket `team-photos` (jpg/png/webp, ≤ 8 MB), admins upload/delete. Managed in the admin panel at `/team`, shown on the website at `/[locale]/team`.

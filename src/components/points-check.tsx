@@ -13,8 +13,8 @@ import { cn } from "@/lib/utils";
 
 const CUSTOMER_KEY = "panzutti-customer-v1"; // same key as checkout, to prefill the phone
 
-/** get_loyalty() from the v5 SQL */
-type Loyalty = { enabled: boolean; points?: number; points_per_order?: number; redeem_points?: number; redeem_value?: number };
+/** get_loyalty() from the v7 SQL */
+type Loyalty = { enabled: boolean; points?: number; earn_amount?: number; redeem_points?: number; redeem_value?: number };
 type State = { kind: "idle" } | { kind: "loading" } | { kind: "error"; message: string } | { kind: "done"; data: Loyalty };
 
 // Stars that burst out from behind the character when the points arrive (angle in degrees, distance in px)

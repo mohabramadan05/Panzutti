@@ -117,6 +117,9 @@ export function SiteHeader({ locale, t }: { locale: Locale; t: Dictionary["nav"]
           <Link href={`/${locale}/careers`} onClick={() => setOpen(false)} className="border-b border-border py-4 font-display text-3xl text-primary">
             {t.careers}
           </Link>
+          <Link href={`/${locale}/team`} onClick={() => setOpen(false)} className="border-b border-border py-4 font-display text-3xl text-primary">
+            {t.team}
+          </Link>
           <Link href={`/${other}`} hrefLang={other} className="mt-6 inline-flex items-center gap-2 font-bold text-foreground/80">
             <Globe className="h-5 w-5" aria-hidden /> {t.language}
           </Link>
