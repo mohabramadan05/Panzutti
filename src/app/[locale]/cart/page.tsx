@@ -7,7 +7,7 @@ import { getMenuData } from "@/lib/data";
 import { buildCatalog } from "@/lib/catalog";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic"; // always fresh menu data from Supabase, no page cache
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;

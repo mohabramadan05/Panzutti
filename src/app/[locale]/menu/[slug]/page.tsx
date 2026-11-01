@@ -10,9 +10,7 @@ import { getMenuItem } from "@/lib/data";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { egp } from "@/lib/format";
 
-export const revalidate = 300;
-// Build no item pages up front; each one is rendered on first visit, then cached for `revalidate`
-export const generateStaticParams = () => [];
+export const dynamic = "force-dynamic"; // always fresh menu data from Supabase, no page cache
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string; slug: string }> }): Promise<Metadata> {
   const { locale, slug } = await params;

@@ -19,7 +19,7 @@ import { brand, type MascotPose } from "@/lib/brand";
 import { telHref, timeLabel } from "@/lib/format";
 
 // Re-read the menu and gallery from Supabase at most every 5 minutes
-export const revalidate = 300;
+export const dynamic = "force-dynamic"; // always fresh menu data from Supabase, no page cache
 
 /** Stagger for [data-reveal] (see globals.css) */
 const delay = (ms: number) => ({ "--d": `${ms}ms` }) as React.CSSProperties;

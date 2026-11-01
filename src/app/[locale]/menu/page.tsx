@@ -12,7 +12,7 @@ import { brand } from "@/lib/brand";
 import { timeLabel } from "@/lib/format";
 
 // Prices and sold-out flags change during the day: re-read at most every 5 minutes
-export const revalidate = 300;
+export const dynamic = "force-dynamic"; // always fresh menu data from Supabase, no page cache
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
