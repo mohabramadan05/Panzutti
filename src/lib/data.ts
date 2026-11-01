@@ -121,8 +121,14 @@ const FALLBACK_CATEGORIES: MenuCategory[] = [
   { id: "fc5", slug: "refreshers", name_en: "Refreshers", name_ar: "مشروبات منعشة", items: ["f8"] },
 ].map((c) => ({ ...c, items: c.items.map((id) => FALLBACK_ITEMS.find((i) => i.id === id)!) }));
 
-/** Prefer the self-hosted photo; keep `image_url` (e.g. a Supabase upload) for items without one. */
-export const withImage = <T extends Pick<MenuItem, "slug" | "image_url">>(i: T): T => ({ ...i, image_url: localMenuImage(i.slug) ?? i.image_url });
+/**
+ * A photo the admin set (Supabase upload or pasted link) always wins. The self-hosted copy in
+ * /public/menu only replaces the old Cloudinary links from the seed, or fills in when there is none.
+ */
+export const withImage = <T extends Pick<MenuItem, "slug" | "image_url">>(i: T): T => {
+  const legacy = !i.image_url || i.image_url.includes("res.cloudinary.com");
+  return legacy ? { ...i, image_url: localMenuImage(i.slug) ?? i.image_url } : i;
+};
 
 const FALLBACK_BRANCH: Branch = {
   id: "fallback",
