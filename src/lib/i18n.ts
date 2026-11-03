@@ -7,9 +7,9 @@ export const dirOf = (l: Locale) => (l === "ar" ? "rtl" : "ltr");
 
 const en = {
   meta: {
-    title: "Panzutti — The First Authentic Panuozzo in Egypt",
+    title: "Panzutti — The First Authentic Panuozzo in Egypt | Italian Sandwiches",
     description:
-      "Neapolitan sourdough baked to order in our wood-fired oven. Order Panuozzo for delivery or pickup in Heliopolis. Fatto con amore.",
+      "Italian panuozzo sandwiches on Neapolitan sourdough, baked to order in our wood-fired oven. Order delivery in Heliopolis and Nasr City, or pickup. Fatto con amore.",
   },
   nav: { menu: "Menu", family: "Panzutti Family", about: "Our story", careers: "Join our team", visit: "Visit us", order: "Order now", language: "العربية", cart: "Cart", track: "Track order", reserve: "Reserve", points: "My points", team: "Our team" },
   hero: {
@@ -80,7 +80,7 @@ const en = {
   },
   menu: {
     metaTitle: "Menu",
-    metaDescription: "Sourdough panuozzi baked to order, side bites, sweet panuozzi and signature drinks. Order for delivery or pickup in Heliopolis.",
+    metaDescription: "Hot Italian sandwiches: sourdough panuozzi with chicken, shrimp, brisket, burrata and truffle. Plus arancini, potato wedges, Caesar salad, sweet panuozzi and signature mojitos. Delivery or pickup.",
     kicker: "Baked to order",
     title: "Our Menu",
     subtitle: "Fresh ingredients. Wood-fired sourdough. Pick your favourite and we'll fire it up.",
@@ -486,8 +486,8 @@ const en = {
 
 const ar: typeof en = {
   meta: {
-    title: "بانزوتي — أول بانوتزو أصلي في مصر",
-    description: "عجينة نابوليتانية مخمّرة بتتخبز عند الطلب في فرن الحطب. اطلب بانوتزو دليفري أو استلام من مصر الجديدة.",
+    title: "بانزوتي — أول بانوتزو أصلي في مصر | ساندوتشات إيطالية",
+    description: "ساندوتشات بانوتزو إيطالية بعجينة نابوليتانية مخمّرة بتتخبز عند الطلب في فرن الحطب. اطلب دليفري في مصر الجديدة ومدينة نصر أو استلام من الفرع.",
   },
   nav: { menu: "المنيو", family: "عيلة بانزوتي", about: "حكايتنا", careers: "انضم لفريقنا", visit: "زورنا", order: "اطلب دلوقتي", language: "English", cart: "السلة", track: "تابع طلبك", reserve: "احجز", points: "نقاطي", team: "فريقنا" },
   hero: {
@@ -558,7 +558,7 @@ const ar: typeof en = {
   },
   menu: {
     metaTitle: "المنيو",
-    metaDescription: "بانوتزو بعجينة مخمّرة بيتخبز عند الطلب، مقبلات، بانوتزو حلو ومشروبات مميزة. اطلب دليفري أو استلام من مصر الجديدة.",
+    metaDescription: "ساندوتشات إيطالية ساخنة: بانوتزو بعجينة مخمّرة بالفراخ والجمبري والبريسكت والبوراتا والترافل. كمان أرانشيني وبطاطس ودجز وسلطة سيزر وبانوتزو حلو وموهيتو مميز. دليفري أو استلام.",
     kicker: "بيتخبز عند الطلب",
     title: "المنيو بتاعنا",
     subtitle: "مكونات طازة. عجينة مخمّرة في فرن الحطب. اختار المفضل عندك واحنا نولّع الفرن.",
