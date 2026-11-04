@@ -39,6 +39,12 @@ export type Branch = {
   instapay_address: string | null; // InstaPay stays hidden until the owner sets this
   tax_rate?: number; // v4: VAT, default 0.14
   service_rate?: number; // v4: service on reservations, default 0.12
+  // v8: delivery by distance, on once latitude/longitude are set (see lib/delivery.ts)
+  latitude?: number | null;
+  longitude?: number | null;
+  delivery_per_km?: number; // piasters
+  delivery_included_km?: number;
+  delivery_max_km?: number | null;
 };
 
 export type FamilyPhoto = { id: string; url: string; caption: string | null; uploader_name: string | null; is_official: boolean };

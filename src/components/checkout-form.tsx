@@ -77,11 +77,11 @@ export function CheckoutForm({
   catalog: Catalog | null;
 }) {
   const router = useRouter();
-  const s = useCartSummary(catalog, branch);
-  const [c, setC] = useState<Customer>({ name: "", phone: "", email: "", address: "", addressNotes: "" });
   const [location, setLocation] = useState<LatLng | null>(null);
+  const s = useCartSummary(catalog, branch, location);
+  const [c, setC] = useState<Customer>({ name: "", phone: "", email: "", address: "", addressNotes: "" });
   const [note, setNote] = useState("");
-  const [errors, setErrors] = useState<Partial<Record<Field | "table", string>>>({});
+  const [errors, setErrors] = useState<Partial<Record<Field | "table" | "location", string>>>({});
   const [promoInput, setPromoInput] = useState("");
   const [promo, setPromo] = useState<{ code: string; discount: number } | null>(null);
   const [promoBusy, setPromoBusy] = useState(false);
@@ -165,16 +165,17 @@ export function CheckoutForm({
   };
 
   const validate = () => {
-    const er: Partial<Record<Field | "table", string>> = {};
+    const er: Partial<Record<Field | "table" | "location", string>> = {};
     if (isReservation && !isPickValid(s.reservation, branch)) er.table = t.pickTime;
     if (!c.name.trim()) er.name = t.required;
     if (!c.phone.trim()) er.phone = t.required;
     else if (!normalizePhone(c.phone)) er.phone = t.phoneInvalid;
     if (c.email.trim() && !EMAIL_RE.test(c.email.trim())) er.email = t.emailInvalid;
     if (s.type === "delivery" && !c.address.trim()) er.address = t.required;
+    if (s.type === "delivery" && s.delivery.needsPin) er.location = t.pinRequired;
     setErrors(er);
     const first = Object.keys(er)[0];
-    if (first) document.getElementById(`f-${first}`)?.[first === "table" ? "scrollIntoView" : "focus"]();
+    if (first) document.getElementById(`f-${first}`)?.[first === "table" || first === "location" ? "scrollIntoView" : "focus"]();
     return !first;
   };
 
@@ -199,6 +200,8 @@ export function CheckoutForm({
       p_promo_code: promo?.code ?? null,
       p_locale: locale,
       p_payment_method: method,
+      // only sent once the branch has the v8 columns, so orders keep working before that SQL is applied
+      ...(s.type === "delivery" && location && "latitude" in branch ? { p_delivery_lat: location.lat, p_delivery_lng: location.lng } : {}),
       // only sent when used, so orders keep working before the v5 SQL is applied
       ...(redeem.points > 0 ? { p_redeem_points: redeem.points } : {}),
       // only sent for reservations, so normal orders keep working before the v4 SQL is applied
@@ -238,7 +241,9 @@ export function CheckoutForm({
   const earn = loyalty?.earn_amount ? Math.floor(Math.max(s.subtotal - discount, 0) / loyalty.earn_amount) : 0;
   const total = totals.total;
   // A reservation is for later, so it can be booked while the branch is closed right now
-  const blocked = !catalog || s.hasUnavailable || s.belowMinimum || (!open && !isReservation);
+  const tooFar = s.type === "delivery" && s.delivery.tooFar;
+  const tooFarMessage = tooFar ? t.tooFar.replace("{km}", (s.delivery.km ?? 0).toFixed(1)).replace("{max}", String(Number(branch.delivery_max_km))) : "";
+  const blocked = !catalog || s.hasUnavailable || s.belowMinimum || tooFar || (!open && !isReservation);
 
   return (
     <form onSubmit={submit} noValidate className="grid items-start gap-8 lg:grid-cols-[1.4fr_1fr]">
@@ -260,7 +265,7 @@ export function CheckoutForm({
               ? t.pickupD.replace("{branch}", pick(branch.name_en, branch.name_ar))
               : isReservation
                 ? t.reservationD.replace("{branch}", pick(branch.name_en, branch.name_ar))
-                : t.deliveryD.replace("{fee}", egp(branch.delivery_fee, locale))}
+                : (s.delivery.byDistance ? t.deliveryDistanceD : t.deliveryD).replace("{fee}", egp(branch.delivery_fee, locale))}
           </p>
         </section>
 
@@ -291,16 +296,23 @@ export function CheckoutForm({
           {s.type === "delivery" && (
             <>
               <Input id="f-address" label={t.address} value={c.address} onChange={set("address")} autoComplete="street-address" placeholder={t.addressPlaceholder} error={errors.address} maxLength={300} />
-              <LocationPicker
-                locale={locale}
-                t={t}
-                value={location}
-                onChange={setLocation}
-                onAddress={(a) => {
-                  setC((cur) => ({ ...cur, address: a.slice(0, 300) }));
-                  setErrors((er) => ({ ...er, address: undefined }));
-                }}
-              />
+              <div id="f-location" className="scroll-mt-24">
+                <LocationPicker
+                  locale={locale}
+                  t={t}
+                  value={location}
+                  onChange={(p) => {
+                    setLocation(p);
+                    setErrors((er) => ({ ...er, location: undefined }));
+                  }}
+                  onAddress={(a) => {
+                    setC((cur) => ({ ...cur, address: a.slice(0, 300) }));
+                    setErrors((er) => ({ ...er, address: undefined }));
+                  }}
+                  required={s.delivery.byDistance}
+                  message={errors.location || tooFarMessage}
+                />
+              </div>
               <Input id="f-addressNotes" label={t.addressNotes} value={c.addressNotes} onChange={set("addressNotes")} maxLength={300} />
             </>
           )}
@@ -446,13 +458,14 @@ export function CheckoutForm({
               <dd className="font-bold tabular-nums">−{egp(redeem.value, locale)}</dd>
             </div>
           )}
-          <TotalsRows totals={totals} type={s.type} locale={locale} t={tCart} />
+          <TotalsRows totals={totals} type={s.type} delivery={s.delivery} locale={locale} t={tCart} />
         </dl>
         {s.belowMinimum && (
           <p className="mt-4 rounded-2xl bg-brand-red/10 px-4 py-3 text-sm font-bold text-brand-red">
             {tCart.minDelivery.replace("{amount}", egp(branch.min_delivery_order, locale))}
           </p>
         )}
+        {tooFar && <p className="mt-4 rounded-2xl bg-brand-red/10 px-4 py-3 text-sm font-bold text-brand-red">{tooFarMessage}</p>}
         {serverError && (
           <p role="alert" className="mt-4 rounded-2xl bg-brand-red/10 px-4 py-3 text-sm font-bold text-brand-red">
             {serverError}

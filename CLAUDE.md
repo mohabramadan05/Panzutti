@@ -32,8 +32,11 @@ Owner: Mohab. Client: **Panzutti**, a panuozzo (wood-fired Neapolitan sandwich-p
 | Panzutti Family wall `/family` + share page `/family/share` (anyone can upload with a name; optional Google sign-in adds "your photos"; every photo needs admin approval) | ✅ Built — guest upload needs the v3 (2) SQL run (see section 8) |
 | Join our team `/careers` + Become a supplier `/suppliers` (shared `components/application-form.tsx` → optional file to `applications/incoming/…` → `submit_application`; open positions/categories via `getJoinData()`) | ✅ Built — validation tested; no real application sent yet |
 | Admin / staff panel — **separate project `D:\work\Panzutti-Admin`** (port 3001; orders board with Realtime, InstaPay review, sold-out/prices, family photos, applications, reports). See its README for giving staff access | ✅ Built — untested with a real login until the first admin account exists |
-| Delivery prices: admin page `/delivery` in Panzutti-Admin edits `branches.delivery_fee` + `min_delivery_order` per branch (no SQL needed; one fee per branch, no area pricing) | ✅ Built — untested with a real admin login |
+| Delivery prices: admin page `/delivery` in Panzutti-Admin edits `branches.delivery_fee` + `min_delivery_order` per branch, plus location and km rates once v8 is run | ✅ Built — saving untested with a real admin login |
+| Promo codes: admin page `/promo-codes` in Panzutti-Admin (admins only; create, edit, on/off, usage counts; delete only while unused; no SQL needed) | ✅ Built — saving untested |
 | SEO keywords: owner's Talabat list in `lib/seo-keywords.ts` → `<meta name="keywords">` on every page per locale (locale layout); competitor names kept in their own array | ✅ Built |
+| Delivery fee by km: base + per-km from the customer's map pin (`lib/delivery.ts`, `place_order` in `database/panzutti_supabase_v8.sql`; rates and restaurant location at `/delivery` in Panzutti-Admin). Fixed fee until the location is set | ✅ Built — **needs v8 SQL run** |
+| New order alarm in Panzutti-Admin (`components/order-alarm.tsx`, every page for admin/staff/cashier): loops until Stop, opening the order, or the order leaves "pending"; needs one click per page load (browser rule) | ✅ Built — untested with a real login |
 | Roles: admin, staff, cashier (no reports), driver (admin panel `/deliveries` only); admin creates users and sets roles at `/users` (`database/panzutti_supabase_v6.sql` + Edge Function `supabase/functions/admin-users`) | ✅ Built — **needs v6 SQL run + `admin-users` deployed** |
 
 ### How we got here
@@ -271,6 +274,7 @@ The server validates sold-out items, required groups (`min_select`/`max_select`)
 ---
 
 ## 8. Things the owner still has to do (not code)
+- **Run `database/panzutti_supabase_v8.sql`** (SQL Editor, whole file, after v7), then in Panzutti-Admin → Delivery prices enter the restaurant location and the rates. Until the location is set, delivery stays at the fixed fee.
 - **Run `database/panzutti_supabase_v7.sql`** (SQL Editor, whole file): points by amount + team gallery. Until then checkout shows no "you'll earn" line, completed orders still earn the old fixed points, and `/team` shows "couldn't load".
 - **Run `database/panzutti_supabase_v4.sql`** (Supabase → SQL Editor, whole file): VAT, service charge, reservations, phone-only tracking. Then redeploy the `send-emails` Edge Function (it now prints VAT/service lines). The admin panel already shows reservations (board filter "tables", dashboard list), VAT/service lines and a VAT report (`report_tax_summary`, also in v4).
 - **Run the guest-upload SQL** (not applied yet — the migration tool was declined): Supabase → SQL Editor → paste the section `v3 (2)` of `database/panzutti_supabase_v3.sql` (from `CREATE OR REPLACE FUNCTION public.guest_family_upload_allowed()` to the end) → Run. Until then, guests on `/family/share` get an upload error; signed-in sharing is unaffected.

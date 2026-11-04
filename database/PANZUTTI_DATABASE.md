@@ -711,3 +711,13 @@ Run after v4. A customer is their phone number (`normalize_phone()` format). No 
 
 - **Points by order amount:** new `app_settings.loyalty_earn_amount` (piasters per point, default 1000 = 1 point per 10 EGP). `orders_loyalty` now earns `floor((subtotal − discount_total) / loyalty_earn_amount)` on completion: food after promo and points discounts, without VAT, service or delivery. `loyalty_points_per_order` is no longer used. `get_loyalty` returns `earn_amount` instead of `points_per_order`.
 - **Team gallery:** table `team_photos(file_path, name?, role_en?, role_ar?, sort_order, is_active)`; RLS: everyone reads active rows, admins read all and write. Public bucket `team-photos` (jpg/png/webp, ≤ 8 MB), admins upload/delete. Managed in the admin panel at `/team`, shown on the website at `/[locale]/team`.
+
+---
+
+## 16. v8 additions (2026-11-04) — `panzutti_supabase_v8.sql`: delivery fee by distance
+
+- **Formula:** `fee = delivery_fee + delivery_per_km × ceil(max(km − delivery_included_km, 0))`. `km` is the straight line (`distance_km()`, haversine) from the branch to the customer's pin, not the road distance. `src/lib/delivery.ts` has the same formula for the display estimate; `place_order` sets the real fee.
+- **Branches:** `latitude`, `longitude`, `delivery_per_km` (piasters), `delivery_included_km`, `delivery_max_km` (NULL = no limit). Distance pricing is on when the location is set; with it NULL, `delivery_fee` is a fixed fee and no pin is needed. Edited in the admin panel at `/delivery`.
+- **Orders:** `delivery_latitude`, `delivery_longitude`, `delivery_distance_km`. The pin also stays in `delivery_notes` as a Google Maps link, which the driver page reads.
+- **`place_order(..., p_delivery_lat, p_delivery_lng)`:** while pricing is on, a delivery with no pin or beyond `delivery_max_km` is refused. A saved address's coordinates are used when no pin is sent. The result also has `delivery_distance_km`.
+- **Limit:** the pin comes from the customer's browser, so a false pin gives a lower fee. Staff can compare the pin with the typed address.

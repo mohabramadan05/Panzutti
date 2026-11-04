@@ -56,12 +56,18 @@ export function LocationPicker({
   value,
   onChange,
   onAddress,
+  required = false,
+  message,
 }: {
   locale: Locale;
   t: Dictionary["checkout"];
   value: LatLng | null;
   onChange: (p: LatLng | null) => void;
   onAddress?: (address: string) => void;
+  /** The delivery fee depends on the pin, so typing an address alone isn't enough */
+  required?: boolean;
+  /** Shown in red under the map (pin missing, too far) */
+  message?: string;
 }) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<GMap | null>(null);
@@ -131,8 +137,10 @@ export function LocationPicker({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- set the map up once per locale
   }, [locale]);
 
+  const locRequired = interactive ? t.locRequiredMap : t.locRequiredNoMap;
+
   const locate = () => {
-    if (!("geolocation" in navigator)) return setError(t.locUnavailable);
+    if (!("geolocation" in navigator)) return setError(required ? locRequired : t.locUnavailable);
     setLocating(true);
     setError("");
     navigator.geolocation.getCurrentPosition(
@@ -148,7 +156,7 @@ export function LocationPicker({
       },
       (err) => {
         setLocating(false);
-        setError(err.code === err.PERMISSION_DENIED ? t.locDenied : t.locUnavailable);
+        setError(required ? locRequired : err.code === err.PERMISSION_DENIED ? t.locDenied : t.locUnavailable);
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 },
     );
@@ -157,7 +165,7 @@ export function LocationPicker({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-sm font-bold">{t.mapLabel}</span>
+        <span className="text-sm font-bold">{required ? t.mapLabelRequired : t.mapLabel}</span>
         <button
           type="button"
           onClick={locate}
@@ -190,8 +198,8 @@ export function LocationPicker({
         )
       )}
 
-      {error ? (
-        <p className="text-sm font-bold text-brand-red">{error}</p>
+      {error || message ? (
+        <p className="text-sm font-bold text-brand-red">{error || message}</p>
       ) : value ? (
         <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
           <span className="font-bold text-primary">{t.locSet}</span>

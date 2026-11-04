@@ -11,6 +11,7 @@ import { withImage } from "@/lib/data";
 import type { Catalog } from "@/lib/catalog";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { MAX_LINE_QUANTITY, estimateTotals, freshen, lineTotal, useCart, type OrderType } from "@/lib/cart";
+import { quoteDelivery, type DeliveryQuote } from "@/lib/delivery";
 import { supabase } from "@/lib/supabase";
 import { egp } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -68,20 +69,22 @@ export function OrderTypeToggle({
 export function TotalsRows({
   totals,
   type,
+  delivery,
   locale,
   t,
 }: {
   totals: ReturnType<typeof estimateTotals>;
   type: OrderType;
+  delivery: DeliveryQuote;
   locale: Locale;
-  t: Pick<Dictionary["cart"], "deliveryFee" | "service" | "vat" | "total">;
+  t: Pick<Dictionary["cart"], "deliveryFee" | "deliveryFeeKm" | "deliveryFeePending" | "service" | "vat" | "total">;
 }) {
   return (
     <>
       {type === "delivery" && (
         <div className="flex justify-between">
-          <dt className="text-muted-foreground">{t.deliveryFee}</dt>
-          <dd className="font-bold tabular-nums">{egp(totals.deliveryFee, locale)}</dd>
+          <dt className="text-muted-foreground">{delivery.km === null ? t.deliveryFee : t.deliveryFeeKm.replace("{km}", delivery.km.toFixed(1))}</dt>
+          <dd className="font-bold tabular-nums">{delivery.needsPin ? t.deliveryFeePending : egp(totals.deliveryFee, locale)}</dd>
         </div>
       )}
       {type === "reservation" && (
@@ -103,17 +106,18 @@ export function TotalsRows({
 }
 
 /** Cart lines checked against the live menu + estimated totals. Shared by cart and checkout. */
-export function useCartSummary(catalog: Catalog | null, branch: Branch) {
+export function useCartSummary(catalog: Catalog | null, branch: Branch, pin: { lat: number; lng: number } | null = null) {
   const cart = useCart();
   return useMemo(() => {
     const lines = cart.lines.map((l) => freshen(l, catalog));
     const subtotal = lines.reduce((s, l) => s + lineTotal(l), 0);
-    const deliveryFee = cart.type === "delivery" ? branch.delivery_fee : 0;
+    const delivery = quoteDelivery(branch, pin);
+    const deliveryFee = cart.type === "delivery" ? delivery.fee : 0;
     const belowMinimum = cart.type === "delivery" && subtotal < branch.min_delivery_order;
     const rates = { taxRate: Number(branch.tax_rate ?? 0.14), serviceRate: Number(branch.service_rate ?? 0.12) };
     const totals = (discount = 0) => estimateTotals({ subtotal, discount, deliveryFee, type: cart.type, ...rates });
-    return { ...cart, lines, subtotal, deliveryFee, belowMinimum, totals, hasUnavailable: lines.some((l) => !l.available) };
-  }, [cart, catalog, branch]);
+    return { ...cart, lines, subtotal, delivery, deliveryFee, belowMinimum, totals, hasUnavailable: lines.some((l) => !l.available) };
+  }, [cart, catalog, branch, pin]);
 }
 
 export function CartView({
@@ -252,7 +256,7 @@ export function CartView({
             <dt className="text-muted-foreground">{t.subtotal}</dt>
             <dd className="font-bold tabular-nums">{egp(s.subtotal, locale)}</dd>
           </div>
-          <TotalsRows totals={s.totals()} type={s.type} locale={locale} t={t} />
+          <TotalsRows totals={s.totals()} type={s.type} delivery={s.delivery} locale={locale} t={t} />
         </dl>
         <p className="mt-2 text-xs text-muted-foreground">{t.estimateNote}</p>
         {s.belowMinimum && (
