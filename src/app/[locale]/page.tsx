@@ -91,14 +91,15 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             <div className="relative animate-fade-up [animation-delay:120ms]">
               <div className="relative aspect-square overflow-hidden rounded-[2.5rem] bg-white shadow-2xl shadow-primary/20 ring-8 ring-card">
                 <Image src={brand.photos.hero} alt="A Panzutti shrimp panuozzo with lettuce and sauce" fill priority sizes="(min-width: 768px) 560px, 100vw" className="object-cover transition duration-700 hover:scale-105" />
+                {/* sticker sits inside the photo frame, top corner */}
+                <Image
+                  src="/brand/sticker-hero.png"
+                  alt={t.hero.sticker.replace("\n", " ")}
+                  width={160}
+                  height={160}
+                  className="pointer-events-none absolute end-4 top-4 z-10 h-24 w-24 rotate-12 animate-[float_5s_ease-in-out_infinite] drop-shadow-xl md:end-6 md:top-6 md:h-32 md:w-32"
+                />
               </div>
-              <Image
-                src="/brand/sticker-hero.png"
-                alt={t.hero.sticker.replace("\n", " ")}
-                width={160}
-                height={160}
-                className="absolute -top-6 end-1 h-28 w-28 rotate-12 animate-[float_5s_ease-in-out_infinite] drop-shadow-xl md:h-36 md:w-36"
-              />
               {/* the character presents the panuozzo */}
               <Mascot pose="presenting" point="end" eager className="absolute -bottom-14 -start-24 hidden h-80 animate-float drop-shadow-xl md:block lg:h-96" />
             </div>

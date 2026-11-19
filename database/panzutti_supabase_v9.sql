@@ -1,28 +1,32 @@
 -- =====================================================================
--- Panzutti v9: "free delivery" promo codes
+-- Panzutti v9: free delivery on promo codes
 -- Run after v8, whole file, in Supabase → SQL Editor. Safe to re-run.
 --
---   promo_codes.discount_type = 'free_delivery'
---     · no money off the food (discount_amount = 0)
---     · the order's delivery_fee becomes 0
---     · delivery orders only (validate_promo_code refuses pickup / reservations)
---     · discount_value is ignored for these codes (stored as 0)
+--   promo_codes.free_delivery boolean (default false) — an extra on top of the normal discount:
+--     · percent / fixed discount as before, PLUS the order's delivery_fee becomes 0
+--     · a code can be free delivery only: discount_value may then be 0
+--     · free delivery only applies to delivery orders. On pickup / reservations the normal
+--       discount still works; a free-delivery-only code (discount_value = 0) is refused there.
 --
 -- place_order is NOT rewritten: it keeps calling validate_promo_code and then sets
 -- orders.promo_code_id; the trigger in section 4 zeroes delivery_fee at that moment,
 -- before the emails are queued and the totals are returned.
---
--- Note: the new enum value can't be used as a literal in the same transaction that adds it,
--- so the constraint below compares discount_type::text, and functions only use it at run time.
 -- =====================================================================
 
--- ---------------------------------------------------------------- 1. enum value
-ALTER TYPE public.discount_type ADD VALUE IF NOT EXISTS 'free_delivery';
+-- ---------------------------------------------------------------- 1. column
+ALTER TABLE public.promo_codes
+  ADD COLUMN IF NOT EXISTS free_delivery boolean NOT NULL DEFAULT false;
 
--- ---------------------------------------------------------------- 2. discount_value may be 0 for free delivery
+-- ---------------------------------------------------------------- 2. discount_value may be 0 for free-delivery codes
 ALTER TABLE public.promo_codes DROP CONSTRAINT IF EXISTS promo_codes_discount_value_check;
+
+-- An earlier draft of this file added a 'free_delivery' value to discount_type instead.
+-- If that draft was run, turn those codes into "fixed 0 + free_delivery" (the enum value stays, unused).
+UPDATE public.promo_codes
+SET free_delivery = true, discount_type = 'fixed', discount_value = 0
+WHERE discount_type::text = 'free_delivery';
 ALTER TABLE public.promo_codes ADD CONSTRAINT promo_codes_discount_value_check CHECK (
-  CASE WHEN discount_type::text = 'free_delivery' THEN discount_value >= 0 ELSE discount_value > 0 END
+  discount_value > 0 OR (free_delivery AND discount_value = 0)
 );
 
 -- ---------------------------------------------------------------- 3. validate_promo_code (+ free_delivery column)
@@ -46,7 +50,6 @@ DECLARE
   v_phone  text := public.normalize_phone(p_phone);
   v_used   integer;
   v_disc   integer;
-  v_free   boolean;
 BEGIN
   SELECT * INTO v FROM public.promo_codes pc
   WHERE upper(pc.code) = upper(trim(p_code))
@@ -55,8 +58,6 @@ BEGIN
   IF NOT FOUND OR NOT v.is_active THEN
     RAISE EXCEPTION 'This promo code is not valid';
   END IF;
-  v_free := v.discount_type::text = 'free_delivery';
-
   IF v.starts_at IS NOT NULL AND now() < v.starts_at THEN
     RAISE EXCEPTION 'This promo code is not active yet';
   END IF;
@@ -66,11 +67,12 @@ BEGIN
   IF v.branch_id IS NOT NULL AND v.branch_id <> p_branch_id THEN
     RAISE EXCEPTION 'This promo code is not valid at this branch';
   END IF;
-  IF v_free AND p_type <> 'delivery' THEN
-    RAISE EXCEPTION 'This promo code gives free delivery, so it only works on delivery orders';
-  END IF;
   IF v.order_type IS NOT NULL AND v.order_type <> p_type THEN
     RAISE EXCEPTION 'This promo code is only valid for % orders', v.order_type;
+  END IF;
+  -- free delivery only, and this is not a delivery order: nothing to give
+  IF v.free_delivery AND v.discount_value = 0 AND p_type <> 'delivery' THEN
+    RAISE EXCEPTION 'This promo code gives free delivery, so it only works on delivery orders';
   END IF;
   IF p_subtotal < v.min_order_total THEN
     RAISE EXCEPTION 'The minimum order for this code is % EGP',
@@ -91,8 +93,8 @@ BEGIN
     END IF;
   END IF;
 
-  IF v_free THEN
-    v_disc := 0;                                -- the saving is the delivery fee (section 4)
+  IF v.discount_value = 0 THEN
+    v_disc := 0;                                -- free delivery only (section 4)
   ELSIF v.discount_type = 'percent' THEN
     v_disc := floor(p_subtotal * v.discount_value / 100.0);
     IF v.max_discount IS NOT NULL THEN v_disc := LEAST(v_disc, v.max_discount); END IF;
@@ -100,7 +102,7 @@ BEGIN
     v_disc := LEAST(v.discount_value, p_subtotal);
   END IF;
 
-  RETURN QUERY SELECT v.id, v.code, v_disc, v_free;
+  RETURN QUERY SELECT v.id, v.code, v_disc, (v.free_delivery AND p_type = 'delivery');
 END;
 $$;
 
@@ -116,7 +118,7 @@ BEGIN
   IF NEW.promo_code_id IS NOT NULL
      AND NEW.type = 'delivery'
      AND EXISTS (SELECT 1 FROM public.promo_codes pc
-                 WHERE pc.id = NEW.promo_code_id AND pc.discount_type::text = 'free_delivery') THEN
+                 WHERE pc.id = NEW.promo_code_id AND pc.free_delivery) THEN
     NEW.delivery_fee := 0;
   END IF;
   RETURN NEW;

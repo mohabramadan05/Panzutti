@@ -722,8 +722,9 @@ Run after v4. A customer is their phone number (`normalize_phone()` format). No 
 - **`place_order(..., p_delivery_lat, p_delivery_lng)`:** while pricing is on, a delivery with no pin or beyond `delivery_max_km` is refused. A saved address's coordinates are used when no pin is sent. The result also has `delivery_distance_km`.
 - **Limit:** the pin comes from the customer's browser, so a false pin gives a lower fee. Staff can compare the pin with the typed address.
 
-## 17. v9 additions (2026-11-19) — `panzutti_supabase_v9.sql`: free-delivery promo codes
-- **New `discount_type` value `free_delivery`.** `discount_value` is ignored and stored as 0 (the check now allows 0 only for this type). The admin panel saves these codes with `order_type = 'delivery'`.
-- **`validate_promo_code`** now returns a 4th column, `free_delivery boolean`. For these codes `discount_amount` is 0, and pickup or reservation orders get the error "This promo code gives free delivery, so it only works on delivery orders". All other checks (dates, branch, minimum order, usage limits) work as before.
+## 17. v9 additions (2026-11-19) — `panzutti_supabase_v9.sql`: free delivery on promo codes
+- **New column `promo_codes.free_delivery boolean`** (default false), an extra on top of the percent or fixed discount. A code can also be free delivery only: `discount_value` may be 0 only when `free_delivery` is true (check `promo_codes_discount_value_check`).
+- **`validate_promo_code`** now returns a 4th column, `free_delivery boolean`, which is true only on delivery orders. On pickup or reservation orders, a code with a discount still gives the discount, and a free-delivery-only code is refused with "This promo code gives free delivery, so it only works on delivery orders".
 - **Trigger `orders_free_delivery_promo`** (`apply_free_delivery_promo()`, BEFORE INSERT OR UPDATE OF promo_code_id, delivery_fee): when a delivery order carries a free-delivery code, it forces `delivery_fee = 0`. `place_order` itself was not changed: its promo UPDATE fires the trigger before the emails are queued, so `total`, the emails and the returned JSON all show the free delivery.
-- **Reports:** `discount_total` does not include the waived delivery fee. To measure free-delivery usage, count the orders with that `promo_code_id`.
+- **Reports:** `discount_total` does not include the waived delivery fee.
+- An earlier draft added an enum value `discount_type = 'free_delivery'`. If that draft was run, v9 converts those codes to fixed 0 + `free_delivery`, and the enum value stays unused.

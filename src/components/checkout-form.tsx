@@ -161,8 +161,7 @@ export function CheckoutForm({
     setPromoBusy(false);
     const row = (data as { promo_code: string; discount_amount: number; free_delivery?: boolean }[] | null)?.[0];
     if (error || !row) return setPromoError(error?.message ?? t.generic);
-    // free_delivery (v9): no money off the food, the delivery fee becomes 0
-    if (row.free_delivery && s.type !== "delivery") return setPromoError(t.promoDeliveryOnly);
+    // free_delivery (v9): true only on delivery orders; the delivery fee becomes 0
     setPromo({ code: row.promo_code, discount: row.discount_amount, freeDelivery: !!row.free_delivery });
   };
 

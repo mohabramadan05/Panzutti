@@ -38,7 +38,7 @@ Owner: Mohab. Client: **Panzutti**, a panuozzo (wood-fired Neapolitan sandwich-p
 | Delivery fee by km: base + per-km from the customer's map pin (`lib/delivery.ts`, `place_order` in `database/panzutti_supabase_v8.sql`; rates and restaurant location at `/delivery` in Panzutti-Admin). Fixed fee until the location is set | ✅ Built — **needs v8 SQL run** |
 | New order alarm in Panzutti-Admin (`components/order-alarm.tsx`, every page for admin/staff/cashier): loops until Stop, opening the order, or the order leaves "pending"; needs one click per page load (browser rule) | ✅ Built — untested with a real login |
 | Roles: admin, staff, cashier (no reports), driver (admin panel `/deliveries` only); admin creates users and sets roles at `/users` (`database/panzutti_supabase_v6.sql` + Edge Function `supabase/functions/admin-users`) | ✅ Built — **needs v6 SQL run + `admin-users` deployed** |
-| Free-delivery promo codes: new discount type `free_delivery` (admin `/promo-codes` in Panzutti-Admin; checkout shows "Free" for delivery; `database/panzutti_supabase_v9.sql`: `validate_promo_code` returns `free_delivery`, trigger zeroes `orders.delivery_fee`) | ✅ Built — **needs v9 SQL run** |
+| Free delivery on promo codes: "Free delivery" checkbox under the discount (admin `/promo-codes` in Panzutti-Admin; column `promo_codes.free_delivery`; checkout shows "Free" for delivery; `database/panzutti_supabase_v9.sql`: `validate_promo_code` returns `free_delivery`, trigger zeroes `orders.delivery_fee`) | ✅ Built — **needs v9 SQL run** |
 
 ### How we got here
 1. Analysed panzutti.com.
@@ -275,7 +275,7 @@ The server validates sold-out items, required groups (`min_select`/`max_select`)
 ---
 
 ## 8. Things the owner still has to do (not code)
-- **Run `database/panzutti_supabase_v9.sql`** (SQL Editor, whole file, after v8): free-delivery promo codes. Until then the admin panel refuses to save a "Free delivery" code; other codes keep working.
+- **Run `database/panzutti_supabase_v9.sql`** (SQL Editor, whole file, after v8): free-delivery promo codes. Until then the admin panel refuses to save a code with "Free delivery" ticked; other codes keep working.
 - **Run `database/panzutti_supabase_v8.sql`** (SQL Editor, whole file, after v7), then in Panzutti-Admin → Delivery prices enter the restaurant location and the rates. Until the location is set, delivery stays at the fixed fee.
 - **Run `database/panzutti_supabase_v7.sql`** (SQL Editor, whole file): points by amount + team gallery. Until then checkout shows no "you'll earn" line, completed orders still earn the old fixed points, and `/team` shows "couldn't load".
 - **Run `database/panzutti_supabase_v4.sql`** (Supabase → SQL Editor, whole file): VAT, service charge, reservations, phone-only tracking. Then redeploy the `send-emails` Edge Function (it now prints VAT/service lines). The admin panel already shows reservations (board filter "tables", dashboard list), VAT/service lines and a VAT report (`report_tax_summary`, also in v4).
