@@ -70,21 +70,30 @@ export function TotalsRows({
   totals,
   type,
   delivery,
+  freeDelivery = false,
   locale,
   t,
 }: {
   totals: ReturnType<typeof estimateTotals>;
   type: OrderType;
   delivery: DeliveryQuote;
+  /** a free-delivery promo code is applied */
+  freeDelivery?: boolean;
   locale: Locale;
-  t: Pick<Dictionary["cart"], "deliveryFee" | "deliveryFeeKm" | "deliveryFeePending" | "service" | "vat" | "total">;
+  t: Pick<Dictionary["cart"], "deliveryFee" | "deliveryFeeKm" | "deliveryFeePending" | "deliveryFree" | "service" | "vat" | "total">;
 }) {
   return (
     <>
       {type === "delivery" && (
         <div className="flex justify-between">
           <dt className="text-muted-foreground">{delivery.km === null ? t.deliveryFee : t.deliveryFeeKm.replace("{km}", delivery.km.toFixed(1))}</dt>
-          <dd className="font-bold tabular-nums">{delivery.needsPin ? t.deliveryFeePending : egp(totals.deliveryFee, locale)}</dd>
+          <dd className="font-bold tabular-nums">{freeDelivery ? (
+            <span className="text-primary">{t.deliveryFree}</span>
+          ) : delivery.needsPin ? (
+            t.deliveryFeePending
+          ) : (
+            egp(totals.deliveryFee, locale)
+          )}</dd>
         </div>
       )}
       {type === "reservation" && (
@@ -115,7 +124,9 @@ export function useCartSummary(catalog: Catalog | null, branch: Branch, pin: { l
     const deliveryFee = cart.type === "delivery" ? delivery.fee : 0;
     const belowMinimum = cart.type === "delivery" && subtotal < branch.min_delivery_order;
     const rates = { taxRate: Number(branch.tax_rate ?? 0.14), serviceRate: Number(branch.service_rate ?? 0.12) };
-    const totals = (discount = 0) => estimateTotals({ subtotal, discount, deliveryFee, type: cart.type, ...rates });
+    // freeDelivery: a free-delivery promo code is applied (the server then sets delivery_fee to 0)
+    const totals = (discount = 0, freeDelivery = false) =>
+      estimateTotals({ subtotal, discount, deliveryFee: freeDelivery ? 0 : deliveryFee, type: cart.type, ...rates });
     return { ...cart, lines, subtotal, delivery, deliveryFee, belowMinimum, totals, hasUnavailable: lines.some((l) => !l.available) };
   }, [cart, catalog, branch, pin]);
 }

@@ -216,7 +216,6 @@ export function PizzaScrollytelling({ t }: { t: Dictionary["scrolly"] }) {
       className="pizza-scrollytelling-container relative h-screen overflow-hidden bg-[#111417] text-white motion-reduce:h-auto motion-reduce:min-h-screen"
     >
       {/* warm glow so the food pops off the slate */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_68%_50%,rgb(254_217_0/.10),transparent_45%),radial-gradient(circle_at_20%_90%,rgb(192_29_46/.12),transparent_40%)]" />
 
       <div className="relative mx-auto grid h-full max-w-6xl grid-rows-[1fr_auto] items-center gap-6 px-4 pb-10 pt-20 md:grid-cols-[1fr_1.15fr] md:grid-rows-1 md:gap-12 md:pb-0">
         {/* -------------------------------------------------------- side panel copy */}

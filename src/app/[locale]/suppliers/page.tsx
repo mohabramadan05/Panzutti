@@ -33,7 +33,6 @@ export default async function SuppliersPage({ params }: { params: Promise<{ loca
       <SiteHeader locale={locale} t={t.nav} />
       <main id="main">
         <section className="relative overflow-hidden bg-brand-yellow">
-          <div aria-hidden className="grain absolute inset-0 opacity-50" />
           <div className="relative mx-auto grid max-w-6xl items-center gap-8 px-4 py-12 md:grid-cols-[1.5fr_1fr] md:py-16">
             <div>
             <p className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.25em] text-brand-red">

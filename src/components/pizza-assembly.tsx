@@ -150,7 +150,7 @@ export function PizzaAssembly({ locale, t }: { locale: Locale; t: Dictionary["pi
 
         <div className="pz-stage" role="img" aria-label={step.t}>
           {/* the character points at the panuozzo while it builds itself */}
-          <Mascot point="end" className="pz-mascot" />
+          <Mascot pose="presenting" point="end" className="pz-mascot" />
           <div className={cn("pz-plate", baking && "is-baking")} aria-hidden />
 
           {/* progress around the plate: fills up while the current step plays */}

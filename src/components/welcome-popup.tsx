@@ -65,8 +65,6 @@ export function WelcomePopup({ locale, t }: { locale: Locale; t: Dictionary["wel
     >
       <div className="relative grid animate-pop-in overflow-hidden rounded-[2rem] bg-brand-cream shadow-2xl md:grid-cols-[1.25fr_1fr]">
         {/* warm glow + dots, like the home hero */}
-        <div aria-hidden className="grain pointer-events-none absolute inset-0 opacity-60" />
-        <div aria-hidden className="pointer-events-none absolute -end-24 -top-24 h-72 w-72 rounded-full bg-brand-yellow/50 blur-3xl" />
 
         <div className="relative order-2 p-6 md:order-1 md:p-9">
           <p className={cn("text-3xl text-brand-red", locale === "ar" ? "font-arabic" : "font-script")}>{t.kicker}</p>

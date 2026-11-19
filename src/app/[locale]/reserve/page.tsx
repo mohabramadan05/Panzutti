@@ -31,7 +31,6 @@ export default async function ReservePage({ params }: { params: Promise<{ locale
       <SiteHeader locale={locale} t={t.nav} />
       <main id="main" className="mx-auto max-w-6xl px-4 pb-24 pt-6">
         <section className="relative mb-10 grid items-center gap-6 overflow-hidden rounded-[2.5rem] bg-primary px-6 py-10 text-primary-foreground md:grid-cols-[1.3fr_1fr] md:px-12 md:py-14">
-          <div aria-hidden className="absolute -end-20 -top-24 h-72 w-72 rounded-full bg-brand-yellow/25 blur-3xl" />
           <div className="relative animate-fade-up">
             <p className="text-sm font-bold uppercase tracking-[0.25em] text-brand-yellow">{t.reserve.kicker}</p>
             <h1 className="mt-2 text-5xl md:text-6xl">{t.reserve.title}</h1>

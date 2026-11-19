@@ -721,3 +721,9 @@ Run after v4. A customer is their phone number (`normalize_phone()` format). No 
 - **Orders:** `delivery_latitude`, `delivery_longitude`, `delivery_distance_km`. The pin also stays in `delivery_notes` as a Google Maps link, which the driver page reads.
 - **`place_order(..., p_delivery_lat, p_delivery_lng)`:** while pricing is on, a delivery with no pin or beyond `delivery_max_km` is refused. A saved address's coordinates are used when no pin is sent. The result also has `delivery_distance_km`.
 - **Limit:** the pin comes from the customer's browser, so a false pin gives a lower fee. Staff can compare the pin with the typed address.
+
+## 17. v9 additions (2026-11-19) — `panzutti_supabase_v9.sql`: free-delivery promo codes
+- **New `discount_type` value `free_delivery`.** `discount_value` is ignored and stored as 0 (the check now allows 0 only for this type). The admin panel saves these codes with `order_type = 'delivery'`.
+- **`validate_promo_code`** now returns a 4th column, `free_delivery boolean`. For these codes `discount_amount` is 0, and pickup or reservation orders get the error "This promo code gives free delivery, so it only works on delivery orders". All other checks (dates, branch, minimum order, usage limits) work as before.
+- **Trigger `orders_free_delivery_promo`** (`apply_free_delivery_promo()`, BEFORE INSERT OR UPDATE OF promo_code_id, delivery_fee): when a delivery order carries a free-delivery code, it forces `delivery_fee = 0`. `place_order` itself was not changed: its promo UPDATE fires the trigger before the emails are queued, so `total`, the emails and the returned JSON all show the free delivery.
+- **Reports:** `discount_total` does not include the waived delivery fee. To measure free-delivery usage, count the orders with that `promo_code_id`.

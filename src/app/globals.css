@@ -106,11 +106,6 @@
   letter-spacing: 0;
   line-height: 1.2;
 }
-/* Dotted texture used behind the hero */
-@utility grain {
-  background-image: radial-gradient(color-mix(in oklab, var(--color-foreground) 7%, transparent) 1px, transparent 1px);
-  background-size: 6px 6px;
-}
 
 /* Scroll reveal: components/scroll-reveal.tsx adds .reveal-ready to <html> and data-shown to each
    [data-reveal] element as it scrolls into view. Without JS (or with reduced motion) nothing is hidden.

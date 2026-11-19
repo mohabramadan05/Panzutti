@@ -38,6 +38,7 @@ Owner: Mohab. Client: **Panzutti**, a panuozzo (wood-fired Neapolitan sandwich-p
 | Delivery fee by km: base + per-km from the customer's map pin (`lib/delivery.ts`, `place_order` in `database/panzutti_supabase_v8.sql`; rates and restaurant location at `/delivery` in Panzutti-Admin). Fixed fee until the location is set | ✅ Built — **needs v8 SQL run** |
 | New order alarm in Panzutti-Admin (`components/order-alarm.tsx`, every page for admin/staff/cashier): loops until Stop, opening the order, or the order leaves "pending"; needs one click per page load (browser rule) | ✅ Built — untested with a real login |
 | Roles: admin, staff, cashier (no reports), driver (admin panel `/deliveries` only); admin creates users and sets roles at `/users` (`database/panzutti_supabase_v6.sql` + Edge Function `supabase/functions/admin-users`) | ✅ Built — **needs v6 SQL run + `admin-users` deployed** |
+| Free-delivery promo codes: new discount type `free_delivery` (admin `/promo-codes` in Panzutti-Admin; checkout shows "Free" for delivery; `database/panzutti_supabase_v9.sql`: `validate_promo_code` returns `free_delivery`, trigger zeroes `orders.delivery_fee`) | ✅ Built — **needs v9 SQL run** |
 
 ### How we got here
 1. Analysed panzutti.com.
@@ -174,7 +175,7 @@ D:\work\Panzutti
 Fonts: **Fraunces** (headings), **DM Sans** (body), **Yellowtail** (`font-script` accent lines like "Favorite Bite."), **Lalezar** (`font-arabic`, Arabic headings). Utilities: `grain`, `animate-marquee`, `animate-float`, `animate-fade-up`.
 
 ### Design language
-**Mascot = the curly-haired Panzutti character** (`public/brand/character.webp`, a transparent cut-out of `character-welcome.jpg`; the old pizza mascot from panzutti.com is no longer used). He appears in the home hero, beside the bestsellers, in the "Build it with us" section (not in the footer any more), in the menu/careers/family/suppliers/track headers, the welcome pop-up and empty/404 states. Rounded-3xl cards, pill buttons, a red rotated sticker on photos, polaroid frames, the floating mascot, a red marquee strip, a dark-green story section with the "على إيدك" badge, a yellow Family section and a dark-green footer. Keep new pages consistent with the home page.
+**Mascot = the curly-haired Panzutti character** (`public/brand/character.webp`, a transparent cut-out of `character-welcome.jpg`; the old pizza mascot from panzutti.com is no longer used). He appears in the home hero, beside the bestsellers, in the "Build it with us" section (not in the footer any more), in the menu/careers/family/suppliers/track headers, the welcome pop-up and empty/404 states. Rounded-3xl cards, pill buttons, the hero sticker image (`public/brand/sticker-hero.png`), the floating mascot, a red marquee strip, a plain dark-green story section (no badge, watermark word or polaroid), a yellow Family section and a dark-green footer. No gradient, blur-blob or dotted "grain" backgrounds (removed 2026-11-19; the `grain` utility is gone). Menu banner title is "Start Order" with display-only delivery/pickup badges (`components/order-type-picker.tsx`, not clickable). Keep new pages consistent with the home page.
 
 ### Restaurant facts
 - Branch: Meraki Complex, Air Force House, El Golf, Salah Salem, Cairo.
@@ -274,6 +275,7 @@ The server validates sold-out items, required groups (`min_select`/`max_select`)
 ---
 
 ## 8. Things the owner still has to do (not code)
+- **Run `database/panzutti_supabase_v9.sql`** (SQL Editor, whole file, after v8): free-delivery promo codes. Until then the admin panel refuses to save a "Free delivery" code; other codes keep working.
 - **Run `database/panzutti_supabase_v8.sql`** (SQL Editor, whole file, after v7), then in Panzutti-Admin → Delivery prices enter the restaurant location and the rates. Until the location is set, delivery stays at the fixed fee.
 - **Run `database/panzutti_supabase_v7.sql`** (SQL Editor, whole file): points by amount + team gallery. Until then checkout shows no "you'll earn" line, completed orders still earn the old fixed points, and `/team` shows "couldn't load".
 - **Run `database/panzutti_supabase_v4.sql`** (Supabase → SQL Editor, whole file): VAT, service charge, reservations, phone-only tracking. Then redeploy the `send-emails` Edge Function (it now prints VAT/service lines). The admin panel already shows reservations (board filter "tables", dashboard list), VAT/service lines and a VAT report (`report_tax_summary`, also in v4).

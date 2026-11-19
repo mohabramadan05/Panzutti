@@ -3,9 +3,7 @@
 .pz-section {
   position: relative;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 85% 20%, color-mix(in oklab, var(--color-brand-yellow, #fed900) 30%, transparent), transparent 45%),
-    var(--color-brand-cream, #fff2d0);
+  background: var(--color-brand-cream, #fff2d0);
 }
 .pz-inner {
   margin-inline: auto;

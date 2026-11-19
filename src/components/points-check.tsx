@@ -75,7 +75,6 @@ export function PointsCheck({ locale, t }: { locale: Locale; t: Dictionary["poin
     <div className="grid items-center gap-10 md:grid-cols-2 [&>*]:min-w-0">
       {/* stage: the character, his speech bubble and the star burst */}
       <div className="relative mx-auto flex h-[22rem] w-full max-w-sm items-end justify-center md:h-[28rem]">
-        <div className="absolute inset-x-6 bottom-0 h-1/2 rounded-full bg-brand-yellow/50 blur-2xl" aria-hidden />
 
         <AnimatePresence>
           {celebrate &&

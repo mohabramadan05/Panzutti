@@ -83,7 +83,7 @@ export function CheckoutForm({
   const [note, setNote] = useState("");
   const [errors, setErrors] = useState<Partial<Record<Field | "table" | "location", string>>>({});
   const [promoInput, setPromoInput] = useState("");
-  const [promo, setPromo] = useState<{ code: string; discount: number } | null>(null);
+  const [promo, setPromo] = useState<{ code: string; discount: number; freeDelivery: boolean } | null>(null);
   const [promoBusy, setPromoBusy] = useState(false);
   const [promoError, setPromoError] = useState("");
   const [loyalty, setLoyalty] = useState<Loyalty | null>(null);
@@ -159,9 +159,11 @@ export function CheckoutForm({
       p_phone: normalizePhone(c.phone),
     });
     setPromoBusy(false);
-    const row = (data as { promo_code: string; discount_amount: number }[] | null)?.[0];
+    const row = (data as { promo_code: string; discount_amount: number; free_delivery?: boolean }[] | null)?.[0];
     if (error || !row) return setPromoError(error?.message ?? t.generic);
-    setPromo({ code: row.promo_code, discount: row.discount_amount });
+    // free_delivery (v9): no money off the food, the delivery fee becomes 0
+    if (row.free_delivery && s.type !== "delivery") return setPromoError(t.promoDeliveryOnly);
+    setPromo({ code: row.promo_code, discount: row.discount_amount, freeDelivery: !!row.free_delivery });
   };
 
   const validate = () => {
@@ -236,7 +238,8 @@ export function CheckoutForm({
   const available = pointsToUse(loyalty, Math.max(s.subtotal - promoDiscount, 0));
   const redeem = usePoints ? available : { points: 0, value: 0 };
   const discount = promoDiscount + redeem.value;
-  const totals = s.totals(discount);
+  const freeDelivery = s.type === "delivery" && !!promo?.freeDelivery;
+  const totals = s.totals(discount, freeDelivery);
   // same rule as the orders_loyalty trigger: food after discounts, rounded down
   const earn = loyalty?.earn_amount ? Math.floor(Math.max(s.subtotal - discount, 0) / loyalty.earn_amount) : 0;
   const total = totals.total;
@@ -381,7 +384,7 @@ export function CheckoutForm({
           {promo ? (
             <p className="flex items-center justify-between gap-2 rounded-2xl bg-primary/10 px-4 py-2.5 text-sm font-bold text-primary">
               <span className="inline-flex items-center gap-2">
-                <Tag className="h-4 w-4" aria-hidden /> {t.promoApplied.replace("{code}", promo.code)}
+                <Tag className="h-4 w-4" aria-hidden /> {(promo.freeDelivery ? t.promoFreeDelivery : t.promoApplied).replace("{code}", promo.code)}
               </span>
               <button type="button" onClick={() => setPromo(null)} className="inline-flex items-center gap-1 hover:text-brand-red">
                 <X className="h-4 w-4" aria-hidden /> {t.removePromo}
@@ -458,7 +461,7 @@ export function CheckoutForm({
               <dd className="font-bold tabular-nums">−{egp(redeem.value, locale)}</dd>
             </div>
           )}
-          <TotalsRows totals={totals} type={s.type} delivery={s.delivery} locale={locale} t={tCart} />
+          <TotalsRows totals={totals} type={s.type} delivery={s.delivery} freeDelivery={freeDelivery} locale={locale} t={tCart} />
         </dl>
         {s.belowMinimum && (
           <p className="mt-4 rounded-2xl bg-brand-red/10 px-4 py-3 text-sm font-bold text-brand-red">

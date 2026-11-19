@@ -50,8 +50,6 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       <main id="main">
         {/* ------------------------------------------------------------ HERO */}
         <section className="relative -mt-16 overflow-hidden pt-16 md:-mt-20 md:pt-20">
-          <div aria-hidden className="grain absolute inset-0 -z-10" />
-          <div aria-hidden className="absolute -end-40 -top-40 -z-10 h-[34rem] w-[34rem] rounded-full bg-brand-yellow/35 blur-3xl" />
 
           <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 pb-14 pt-6 md:grid-cols-[1fr_1.1fr] md:pb-20 md:pt-10">
             <div className="animate-fade-up">
@@ -61,18 +59,9 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
 
               <h1 className="mt-5 text-5xl text-primary sm:text-6xl lg:text-7xl">
                 {t.hero.titleTop}
-                <span className={`block text-6xl text-brand-red sm:text-7xl lg:text-8xl ${script}`}>{t.hero.titleScript}</span>
+                <span className={`block text-5xl text-brand-red sm:text-4xl lg:text-7xl `}>{t.hero.titleScript}</span>
               </h1>
-              {/* Italian signature line, always in Latin script */}
-              <p
-                lang="it"
-                dir="ltr"
-                className="mt-2 inline-flex animate-fade-up items-center gap-2 font-script text-4xl text-brand-yellow [animation-delay:350ms] [text-shadow:2px_2px_0_var(--color-brand-green),-1px_-1px_0_var(--color-brand-green),1px_-1px_0_var(--color-brand-green),-1px_1px_0_var(--color-brand-green)] sm:text-5xl"
-              >
-                {t.hero.amore}
-                <Heart className="h-7 w-7 animate-wiggle fill-brand-red text-brand-red sm:h-8 sm:w-8" aria-hidden />
-              </p>
-
+              
               <p className="mt-5 max-w-md text-lg text-foreground/80">{t.hero.subtitle}</p>
 
               <div className="mt-8 flex flex-wrap gap-3">
@@ -103,9 +92,13 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
               <div className="relative aspect-square overflow-hidden rounded-[2.5rem] bg-white shadow-2xl shadow-primary/20 ring-8 ring-card">
                 <Image src={brand.photos.hero} alt="A Panzutti shrimp panuozzo with lettuce and sauce" fill priority sizes="(min-width: 768px) 560px, 100vw" className="object-cover transition duration-700 hover:scale-105" />
               </div>
-              <div className="absolute -top-4 end-3 flex h-24 w-24 rotate-12 animate-[float_5s_ease-in-out_infinite] items-center justify-center rounded-full bg-brand-red text-center text-brand-cream shadow-xl md:h-28 md:w-28">
-                <span className={`whitespace-pre-line leading-tight ${locale === "ar" ? "font-arabic text-lg" : "font-script text-xl"}`}>{t.hero.sticker}</span>
-              </div>
+              <Image
+                src="/brand/sticker-hero.png"
+                alt={t.hero.sticker.replace("\n", " ")}
+                width={160}
+                height={160}
+                className="absolute -top-6 end-1 h-28 w-28 rotate-12 animate-[float_5s_ease-in-out_infinite] drop-shadow-xl md:h-36 md:w-36"
+              />
               {/* the character presents the panuozzo */}
               <Mascot pose="presenting" point="end" eager className="absolute -bottom-14 -start-24 hidden h-80 animate-float drop-shadow-xl md:block lg:h-96" />
             </div>
@@ -153,26 +146,12 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
 
         {/* ------------------------------------------------------------ STORY */}
         <section id="story" className="relative scroll-mt-20 overflow-hidden bg-primary text-primary-foreground">
-          <span aria-hidden className="pointer-events-none absolute -end-6 top-6 select-none font-display text-[9rem] leading-none text-primary-foreground/[0.05] md:text-[15rem]">
-            PANUOZZO
-          </span>
           <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-4 py-20 md:grid-cols-2 md:py-28">
             <div className="relative mx-auto w-full max-w-md md:max-w-none" data-reveal="left">
               {/* the character carrying a giant panuozzo, on the brand chain pattern */}
               <div className="relative flex aspect-[4/5] -rotate-2 items-end justify-center overflow-hidden rounded-[2rem] bg-brand-red shadow-2xl ring-8 ring-brand-cream">
                 <ChainPattern size={150} className="opacity-35" />
-                <div aria-hidden className="absolute inset-0 grain opacity-40" />
                 <Mascot pose="panuozzoWalk" className="relative h-[92%] animate-float drop-shadow-xl" />
-              </div>
-              <figure className="absolute -bottom-8 -end-3 w-[44%] rotate-6 rounded-2xl bg-brand-cream p-2 pb-8 shadow-xl transition hover:rotate-2 md:-end-8">
-                <div className="relative aspect-square overflow-hidden rounded-xl bg-white">
-                  <Image src={brand.photos.story} alt="" fill sizes="220px" className="object-cover" />
-                </div>
-                <figcaption className={`absolute inset-x-0 bottom-1 text-center text-lg text-brand-red ${script}`}>{t.story.caption}</figcaption>
-              </figure>
-              <div className="absolute -start-3 -top-5 flex h-24 w-24 -rotate-12 flex-col items-center justify-center rounded-full bg-brand-red text-center text-brand-cream shadow-lg md:-start-6 md:h-28 md:w-28">
-                <span className="font-arabic text-2xl md:text-3xl">على إيدك</span>
-                <span className="text-[10px] font-bold uppercase tracking-widest">{t.story.badge}</span>
               </div>
             </div>
 

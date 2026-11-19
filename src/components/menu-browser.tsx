@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { CakeSlice, Coffee, CupSoda, Drumstick, GlassWater, Salad, Sandwich, Search, Sparkles, X } from "lucide-react";
 import { ProductCard } from "./product-card";
 import { Mascot } from "./brand";
+import { PanuozzoIcon } from "./panuozzo-icon";
 import type { MenuCategory } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -11,6 +12,7 @@ import { cn } from "@/lib/utils";
 const iconFor = (slug: string) =>
   slug.includes("morning") || slug.includes("hot") || slug.includes("coffee") ? Coffee
   : slug.includes("sweet") || slug.includes("dessert") ? CakeSlice
+  : slug.includes("all-day") ? PanuozzoIcon
   : slug.includes("panuozzo") ? Sandwich
   : slug.includes("fresh") || slug.includes("salad") ? Salad
   : slug.includes("signature") ? Sparkles

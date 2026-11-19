@@ -5,6 +5,7 @@ import { Clock, Flame, WifiOff } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { MenuBrowser } from "@/components/menu-browser";
+import { OrderTypePicker } from "@/components/order-type-picker";
 import { Mascot } from "@/components/brand";
 import { getMenuData, openStatus } from "@/lib/data";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
@@ -50,6 +51,7 @@ export default async function MenuPage({ params }: { params: Promise<{ locale: s
               </p>
               <h1 className="mt-3 text-5xl md:text-7xl">{t.menu.title}</h1>
               <p className="mt-4 max-w-md text-lg opacity-90">{t.menu.subtitle}</p>
+              <OrderTypePicker t={t.menu} />
               {!open && (
                 <p className="mt-6 inline-flex items-center gap-2 rounded-full bg-brand-red px-4 py-2 text-sm font-bold text-brand-cream">
                   <Clock className="h-4 w-4" aria-hidden /> {t.menu.closedNote.replace("{time}", timeLabel(data.branch.opens_at, locale))}
